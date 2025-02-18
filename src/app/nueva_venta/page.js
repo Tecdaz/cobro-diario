@@ -1,11 +1,10 @@
 "use client"
 
 import InputField from "@/components/InputField";
-import { useEffect, useState } from "react";
-import { set, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 export default function NuevaVenta() {
-    const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
+    const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             producto: "Credito"
         }
