@@ -1,8 +1,14 @@
+"use client"
+import { useLayout } from "@/contexts/LayoutContext"
+
 export default function NavBarItem(props) {
-    const { Icon } = props
+    const { pathName } = useLayout()
+
+
+    const { children, href } = props
     return (
-        <div className="h-full w-full bg-orange-400 flex justify-center items-center">
-            <Icon className="h-12 w-12" />
-        </div>
+        <a href={href} className={`h-full w-full bg-orange-400 flex justify-center items-center ${pathName === href ? "text-white" : "text-black"}`}>
+            {children}
+        </a>
     )
 }
