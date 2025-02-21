@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Header from "@/components/Header";
+import { LayoutProvider } from "@/contexts/LayoutContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,14 +21,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
-      >
-        <Header />
-        <main className="overflow-auto mt-10 mb-16 flex-1">{children}</main>
-        <NavBar />
-      </body>
-    </html>
+    <LayoutProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
+        >
+          <Header />
+          <main className="overflow-auto mt-10 mb-16 flex-1">{children}</main>
+          <NavBar />
+        </body>
+      </html>
+    </LayoutProvider>
+
   );
 }

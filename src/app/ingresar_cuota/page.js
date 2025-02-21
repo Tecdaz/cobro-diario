@@ -3,14 +3,21 @@ import InputField from "@/components/InputField";
 import InputRadio from "@/components/InputRadio";
 import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
+import { useLayout } from "@/contexts/LayoutContext";
 
 export default function IngresarCuota() {
+    const { handleTitleChange } = useLayout();
     const { register, handleSubmit, watch, formState: { errors } } = useForm({
         defaultValues: {
             pago: "cuota"
         }
     }
     );
+
+    useEffect(() => {
+        handleTitleChange("Ingresar cuota")
+    }, [])
 
     const onSubmit = (data) => {
         console.log("Datos enviados:", data);
