@@ -1,14 +1,40 @@
+"use client"
 import CardCliente from "@/components/card_cliente/CardCliente";
 import SearchBar from "@/components/SearchBar";
 import Image from "next/image";
+import { useLayout } from "@/contexts/LayoutContext";
+import { useEffect, useState } from "react";
+import { getTodayCobros } from "@/lib/db";
 
 export default function Home() {
-  const clientes = Array(30).fill({ nombre: "Juan Perez", cuota: 1232, saldo: 1234, id: 1, status: "ok" });
+  const { handleTitleChange } = useLayout();
+  const [data, setData] = useState([]);
+  useEffect(() => {
+    handleTitleChange("Clientes")
+    const fetchData = async () => {
+      try {
+        const dataFetch = await getTodayCobros();
+        console.log("Data", dataFetch);
+        setData(dataFetch);
+      }
+      catch (error) {
+        console.log("Error", error);
+      }
+
+    }
+    fetchData();
+  }, []);
+
   return (
     <div className="flex flex-col">
       <SearchBar />
-      {clientes.map((cliente, index) => (
-        <CardCliente key={index} {...cliente} className={index % 2 === 0 && "bg-gray-300"} />
+      {data.map((venta, index) => (
+        <CardCliente
+          key={index}
+          className={index % 2 === 0 && "bg-gray-300"}
+          nombre={venta.cliente.nombre}
+          cuota={venta.valor_cuota}
+          saldo={10000} />
       ))}
 
     </div>
