@@ -11,7 +11,7 @@ export default function SearchBar() {
 
                 <input className="flex-1 min-w-0 focus:outline-none" type="text" placeholder="Buscar" />
                 <button>
-                    <MagnifyingGlassIcon className='h-6 w-6 rotate-90' />
+                    <MagnifyingGlassIcon className='h-6 w-6' />
                 </button>
             </div>
         </div>
