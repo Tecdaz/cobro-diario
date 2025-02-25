@@ -32,7 +32,7 @@ export default function Home() {
         <CardCliente
           key={index}
           className={index % 2 === 0 && "bg-gray-300"}
-          nombre={venta.cliente.nombre}
+          nombre={venta.nombre}
           cuota={venta.valor_cuota}
           saldo={10000} />
       ))}
