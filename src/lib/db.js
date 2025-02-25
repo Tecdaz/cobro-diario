@@ -5,11 +5,8 @@ export const supabase = createClient('https://zaeatqfktzrnlbcgvihz.supabase.co',
 
 export async function getTodayCobros() {
     const { data, error } = await supabase
-        .from('venta')
-        .select(`
-            *,
-            cliente(*)`)
-        .eq('dia_semana', 'lunes')
+        .from('ventas_para_cobrar')
+        .select('*')
 
     if (error) throw error
     return data
@@ -38,6 +35,8 @@ export async function createVentaData(ventaData) {
     const { data, error } = await supabase
         .from('venta')
         .insert(ventaData)
+
+    console.log("error", error);
     if (error) throw error
     return data
 }
