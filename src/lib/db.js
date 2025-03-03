@@ -40,3 +40,32 @@ export async function createVentaData(ventaData) {
     if (error) throw error
     return data
 }
+
+export async function getDataCuotas(idVenta) {
+    const { data, error } = await supabase
+        .from('venta')
+        .select(`
+            id,
+            valor_cuota,
+            cuotas,
+            cliente_id,
+            cliente(
+                nombre,
+                telefono,
+                direccion
+            ),
+            abono(
+                id,
+                valor,
+                venta_id    
+            ),
+            cuota(
+                id,
+                venta_id,
+                cantidad
+            )`)
+        .eq('id', idVenta)
+
+    if (error) throw error
+    return data
+}
