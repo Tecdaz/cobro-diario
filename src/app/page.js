@@ -23,7 +23,7 @@ export default function Home() {
 
     }
     fetchData();
-  }, []);
+  }, [handleTitleChange]);
 
   return (
     <div className="flex flex-col">

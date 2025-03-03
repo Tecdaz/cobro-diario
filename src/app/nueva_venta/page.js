@@ -57,7 +57,7 @@ export default function NuevaVenta() {
 
     useEffect(() => {
         handleTitleChange("Nueva venta")
-    }, []);
+    }, [handleTitleChange]);
 
 
     const onSubmit = async (data) => {
