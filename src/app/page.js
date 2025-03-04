@@ -57,7 +57,7 @@ export default function Home() {
       {data.map((venta, index) => (
         <CardCliente
           href={`/ingresar_cuota/${venta.id}`}
-          key={index}
+          key={venta.id}
           className={index % 2 === 0 && "bg-gray-300"}
           data={venta} />
       ))}
