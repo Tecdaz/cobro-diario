@@ -6,7 +6,7 @@ export const supabase = createClient('https://zaeatqfktzrnlbcgvihz.supabase.co',
 export async function getTodayCobros() {
     const { data, error } = await supabase
         .from('ventas_para_cobrar')
-        .select('id, nombre, valor_cuota, saldo')
+        .select('*')
 
     if (error) throw error
     return data
@@ -15,7 +15,7 @@ export async function getTodayCobros() {
 export async function getTodayPayments() {
     const { data, error } = await supabase
         .from('cobros_hoy')
-        .select('id, nombre, valor_cuota, saldo')
+        .select('*')
 
     if (error) throw error
     return data
