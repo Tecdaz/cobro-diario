@@ -6,7 +6,16 @@ export const supabase = createClient('https://zaeatqfktzrnlbcgvihz.supabase.co',
 export async function getTodayCobros() {
     const { data, error } = await supabase
         .from('ventas_para_cobrar')
-        .select('*')
+        .select('id, nombre, valor_cuota, saldo')
+
+    if (error) throw error
+    return data
+}
+
+export async function getTodayPayments() {
+    const { data, error } = await supabase
+        .from('cobros_hoy')
+        .select('id, nombre, valor_cuota, saldo')
 
     if (error) throw error
     return data
@@ -65,6 +74,24 @@ export async function getDataCuotas(idVenta) {
                 cantidad
             )`)
         .eq('id', idVenta)
+
+    if (error) throw error
+    return data
+}
+
+export async function createAbono(abonoData) {
+    const { data, error } = await supabase
+        .from('abono')
+        .insert(abonoData)
+
+    if (error) throw error
+    return data
+}
+
+export async function createCuota(cuotaData) {
+    const { data, error } = await supabase
+        .from('cuota')
+        .insert(cuotaData)
 
     if (error) throw error
     return data

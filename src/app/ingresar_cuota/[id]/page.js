@@ -5,13 +5,13 @@ import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
-import { getDataCuotas } from "@/lib/db";
-import { useParams } from "next/navigation";
+import { getDataCuotas, createAbono, createCuota } from "@/lib/db";
+import { useParams, useRouter } from "next/navigation";
 import SelectField from "@/components/SelectField";
+import Link from "next/link";
 
 export default function Page() {
     const { handleTitleChange } = useLayout();
-
     const [data, setData] = useState([
         {
             cliente: {
@@ -25,6 +25,8 @@ export default function Page() {
             abono: []
         }
     ]);
+
+    const router = useRouter();
     const [nuevoSaldo, setNuevoSaldo] = useState(0);
     const [saldoActual, setSaldoActual] = useState(0);
 
@@ -116,7 +118,7 @@ export default function Page() {
         }
     }, [watchedValues, data, setValue]);
 
-    const onSubmit = (data) => {
+    const onSubmit = async (data) => {
         const datosParseados = {
             ...data,
             cuotas: data.cuotas ? parseInt(data.cuotas) : 0,
@@ -131,6 +133,23 @@ export default function Page() {
             return;
         }
         console.log("Datos enviados:", datosParseados);
+        if (datosParseados.pago === 'cuota') {
+            const dataCuota = {
+                cantidad: datosParseados.cuotas,
+                venta_id: id
+            }
+
+            await createCuota(dataCuota);
+        }
+        if (datosParseados.pago === 'abono') {
+            const dataAbono = {
+                valor: datosParseados.abono,
+                venta_id: id
+            }
+            await createAbono(dataAbono);
+        }
+
+        router.push("/");
     }
 
     const pagoSeleccionado = watch("pago");
@@ -189,7 +208,10 @@ export default function Page() {
 
                 <div className="flex-1 flex flex-col  justify-end">
                     <div className="flex gap-4 items-center">
-                        <button className="border-gray-500 border-2 p-2 rounded-md mt-2 w-full">Cancelar</button>
+                        <Link href="/" className="w-full">
+                            <button className="border-gray-500 border-2 p-2 rounded-md mt-2 w-full">Cancelar</button>
+                        </Link>
+
                         <button className="bg-blue-500 text-white p-2 rounded-md mt-2 w-full" onClick={handleSubmit(onSubmit)}>Registrar cuota</button>
                     </div>
 
