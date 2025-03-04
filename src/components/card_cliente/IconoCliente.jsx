@@ -1,5 +1,5 @@
 export default function IconoCliente(props) {
-    const { status } = props
+    const { status, onClick } = props
 
     let color = "bg-black"
     if (status === "ok") {
@@ -12,6 +12,6 @@ export default function IconoCliente(props) {
         color = "bg-red-400"
     }
     return (
-        <div className={`h-12 w-12 ${color}`}>X</div>
+        <div onClick={onClick} className={`h-12 w-12 ${color}`}>X</div>
     )
 }

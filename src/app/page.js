@@ -55,14 +55,12 @@ export default function Home() {
         <SearchBar />
       </div>
       {data.map((venta, index) => (
-        <Link href={`/ingresar_cuota/${venta.id}`} key={index}>
-          <CardCliente
-            key={index}
-            className={index % 2 === 0 && "bg-gray-300"}
-            nombre={venta.nombre}
-            cuota={venta.valor_cuota}
-            saldo={venta.saldo} />
-        </Link>))}
+        <CardCliente
+          href={`/ingresar_cuota/${venta.id}`}
+          key={index}
+          className={index % 2 === 0 && "bg-gray-300"}
+          data={venta} />
+      ))}
     </div>
   );
 }
