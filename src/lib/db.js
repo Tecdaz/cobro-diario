@@ -96,3 +96,12 @@ export async function createCuota(cuotaData) {
     if (error) throw error
     return data
 }
+
+export async function createGasto(gastoData) {
+    const { data, error } = await supabase
+        .from('gastos_ingresos')
+        .insert(gastoData)
+
+    if (error) throw error
+    return data
+}

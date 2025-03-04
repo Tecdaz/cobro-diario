@@ -11,10 +11,10 @@ export default function NavBar() {
             <NavBarItem href="/nueva_venta" >
                 <UserPlusIcon className="h-12 w-12" />
             </NavBarItem>
-            <NavBarItem  >
+            <NavBarItem href="/gestion_gastos">
                 <ScaleIcon className="h-12 w-12" />
             </NavBarItem>
-            <NavBarItem  >
+            <NavBarItem href="/resumen">
                 <PresentationChartBarIcon className="h-12 w-12" />
             </NavBarItem>
         </div>
