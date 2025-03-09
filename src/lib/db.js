@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getEndOfTheDay, getStartOfTheDay } from './utils'
 
 // Create a single supabase client for interacting with your database
 export const supabase = createClient('https://zaeatqfktzrnlbcgvihz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZWF0cWZrdHpybmxiY2d2aWh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwMTYxOTksImV4cCI6MjA1NTU5MjE5OX0.ySxcSiqEwf5iAHpXktPRYBz2paeMjuzNQyjpj_dzpHE')
@@ -101,6 +102,48 @@ export async function createGasto(gastoData) {
     const { data, error } = await supabase
         .from('gastos_ingresos')
         .insert(gastoData)
+
+    if (error) throw error
+    return data
+}
+
+export async function totalClientes() {
+    const { count, error } = await supabase
+        .from('cliente')
+        .select('id', { count: 'exact' })
+
+
+    if (error) throw error
+    return count
+}
+
+export async function clientesHoy() {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { count, error } = await supabase
+        .from('cliente')
+        .select('id', { count: 'exact' })
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+
+    if (error) throw error
+    return count
+}
+
+export async function getPaymentsRegistered() {
+    const { count, error } = await supabase
+        .from('cobros_hoy')
+        .select('id', { count: 'exact' })
+
+    if (error) throw error
+    return count
+}
+
+export async function getClients() {
+    const { data, error } = await supabase
+        .from('cliente')
+        .select('*')
 
     if (error) throw error
     return data
