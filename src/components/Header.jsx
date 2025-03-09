@@ -15,6 +15,7 @@ export default function Header() {
         { title: "Resumen", href: "/resumen" },
         { title: "Clientes", href: "/clientes" },
         { title: "Nueva Venta", href: "/nueva_venta" },
+        { title: "Ventas de Hoy", href: "/ventas_nuevas" },
         { title: "Renovar Venta", href: "/renovar_venta" },
         { title: "Gestión Gastos", href: "/gestion_gastos" },
     ]

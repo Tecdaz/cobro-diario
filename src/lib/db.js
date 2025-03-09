@@ -159,3 +159,26 @@ export async function updateClientData(clientId, clientData) {
     if (error) throw error;
     return data;
 }
+
+export async function getVentasHoy() {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('venta')
+        .select(`
+            *,
+            cliente (
+                nombre,
+                telefono,
+                direccion,
+                documento
+            )
+        `)
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
