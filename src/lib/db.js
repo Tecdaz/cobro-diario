@@ -182,3 +182,43 @@ export async function getVentasHoy() {
     if (error) throw error;
     return data;
 }
+
+export async function getVentaById(ventaId) {
+    const { data, error } = await supabase
+        .from('venta')
+        .select(`
+            *,
+            cliente (
+                nombre,
+                telefono,
+                direccion,
+                documento
+            )
+        `)
+        .eq('id', ventaId)
+        .single();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function updateVentaData(ventaId, ventaData) {
+    const { data, error } = await supabase
+        .from('venta')
+        .update(ventaData)
+        .eq('id', ventaId)
+        .select();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function deleteVenta(ventaId) {
+    const { error } = await supabase
+        .from('venta')
+        .delete()
+        .eq('id', ventaId);
+
+    if (error) throw error;
+    return true;
+}
