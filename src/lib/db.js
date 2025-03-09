@@ -148,3 +148,14 @@ export async function getClients() {
     if (error) throw error
     return data
 }
+
+export async function updateClientData(clientId, clientData) {
+    const { data, error } = await supabase
+        .from('cliente')
+        .update(clientData)
+        .eq('id', clientId)
+        .select();
+
+    if (error) throw error;
+    return data;
+}
