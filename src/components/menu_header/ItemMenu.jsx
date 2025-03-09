@@ -1,7 +1,21 @@
-export default function ItemMenu(props) {
+import Link from 'next/link'
 
-    const { title } = props
+export default function ItemMenu({ title, href, onClose }) {
+    const handleClick = () => {
+        if (onClose) {
+            onClose();
+        }
+    };
+
     return (
-        <li><a href="#" className="text-white block p-2">{title}</a></li>
+        <li>
+            <Link
+                href={href}
+                className="text-white block p-2 hover:bg-orange-700 rounded transition-colors"
+                onClick={handleClick}
+            >
+                {title}
+            </Link>
+        </li>
     )
 }
