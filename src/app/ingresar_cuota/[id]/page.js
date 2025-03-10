@@ -118,14 +118,14 @@ export default function Page() {
         }
     }, [watchedValues, data, setValue]);
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (dataForm) => {
         const datosParseados = {
-            ...data,
-            cuotas: data.cuotas ? parseInt(data.cuotas) : 0,
-            abono: data.abono ? parseInt(data.abono) : 0,
-            totalVenta: parseInt(data.totalVenta),
-            saldoActual: parseInt(data.saldoActual),
-            nuevoSaldo: parseInt(data.nuevoSaldo),
+            ...dataForm,
+            cuotas: dataForm.cuotas ? parseInt(dataForm.cuotas) : 0,
+            abono: dataForm.abono ? parseInt(dataForm.abono) : 0,
+            totalVenta: parseInt(dataForm.totalVenta),
+            saldoActual: parseInt(dataForm.saldoActual),
+            nuevoSaldo: parseInt(dataForm.nuevoSaldo),
         }
 
         if (datosParseados.nuevoSaldo < 0) {
@@ -135,8 +135,10 @@ export default function Page() {
         console.log("Datos enviados:", datosParseados);
         if (datosParseados.pago === 'cuota') {
             const dataCuota = {
+                venta_id: id,
                 cantidad: datosParseados.cuotas,
-                venta_id: id
+                valor_cuota: data[0]['valor_cuota'],
+                total: datosParseados.cuotas * data[0]['valor_cuota']
             }
 
             await createCuota(dataCuota);
