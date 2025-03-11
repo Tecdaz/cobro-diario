@@ -1,17 +1,30 @@
-export default function IconoCliente(props) {
-    const { status, onClick } = props
+import { Info, X } from 'lucide-react';
 
-    let color = "bg-black"
+export default function IconoCliente(props) {
+    const { status, onClick, isOpen } = props
+
+    let bgColor = "bg-gray-100"
+    let textColor = "text-gray-600"
+
     if (status === "ok") {
-        color = "bg-green-400"
+        bgColor = "bg-green-100"
+        textColor = "text-green-600"
     }
     if (status === "warning") {
-        color = "bg-yellow-400"
+        bgColor = "bg-yellow-100"
+        textColor = "text-yellow-600"
     }
     if (status === "bad") {
-        color = "bg-red-400"
+        bgColor = "bg-red-100"
+        textColor = "text-red-600"
     }
+
     return (
-        <div onClick={onClick} className={`h-12 w-12 ${color}`}>X</div>
+        <div
+            onClick={onClick}
+            className={`w-8 h-8 ${bgColor} ${textColor} rounded flex items-center justify-center cursor-pointer hover:bg-opacity-75 transition-colors`}
+        >
+            {isOpen ? <X size={18} /> : <Info size={18} />}
+        </div>
     )
 }
