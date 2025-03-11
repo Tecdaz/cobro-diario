@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 import { getEndOfTheDay, getStartOfTheDay } from './utils'
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 // Create a single supabase client for interacting with your database
-export const supabase = createClient('https://zaeatqfktzrnlbcgvihz.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InphZWF0cWZrdHpybmxiY2d2aWh6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDAwMTYxOTksImV4cCI6MjA1NTU5MjE5OX0.ySxcSiqEwf5iAHpXktPRYBz2paeMjuzNQyjpj_dzpHE')
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 export async function getTodayCobros() {
     const { data, error } = await supabase
