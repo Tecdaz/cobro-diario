@@ -85,7 +85,20 @@ export async function getDataCuotas(idVenta) {
     return data
 }
 
+export async function deleteSiguienteDia(ventaId) {
+    const { error } = await supabase
+        .from('siguiente_dia')
+        .delete()
+        .eq('venta_id', ventaId);
+
+    if (error) throw error;
+    return true;
+}
+
 export async function createAbono(abonoData) {
+    // Primero eliminamos cualquier registro en siguiente_dia
+    await deleteSiguienteDia(abonoData.venta_id);
+
     const { data, error } = await supabase
         .from('abono')
         .insert(abonoData)
@@ -95,6 +108,9 @@ export async function createAbono(abonoData) {
 }
 
 export async function createCuota(cuotaData) {
+    // Primero eliminamos cualquier registro en siguiente_dia
+    await deleteSiguienteDia(cuotaData.venta_id);
+
     // Asegurarse de que todos los campos necesarios estén presentes
     const cuotaCompleta = {
         venta_id: cuotaData.venta_id,
@@ -371,4 +387,15 @@ export async function getCajaInicial() {
     // La caja inicial es la suma de todos los ingresos menos los gastos y ventas
     return (totalCuotasHistoricas + totalAbonosHistoricos + totalIngresosHistoricos) -
         (totalGastosHistoricos + totalVentasHistoricas);
+}
+
+export async function createSiguienteDia(data) {
+    const { error } = await supabase
+        .from('siguiente_dia')
+        .insert({
+            venta_id: data.venta_id
+        });
+
+    if (error) throw error;
+    return true;
 }

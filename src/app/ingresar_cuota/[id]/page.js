@@ -5,7 +5,7 @@ import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
-import { getDataCuotas, createAbono, createCuota } from "@/lib/db";
+import { getDataCuotas, createAbono, createCuota, createSiguienteDia } from "@/lib/db";
 import { useParams, useRouter } from "next/navigation";
 import SelectField from "@/components/SelectField";
 import Link from "next/link";
@@ -132,26 +132,45 @@ export default function Page() {
             console.log("El nuevo saldo no puede ser negativo. Por favor, ingresa un valor válido de cuotas o abono.");
             return;
         }
-        console.log("Datos enviados:", datosParseados);
-        if (datosParseados.pago === 'cuota') {
-            const dataCuota = {
-                venta_id: id,
-                cantidad: datosParseados.cuotas,
-                valor_cuota: data[0]['valor_cuota'],
-                total: datosParseados.cuotas * data[0]['valor_cuota']
+
+        try {
+            console.log("Datos enviados:", datosParseados);
+
+            if (datosParseados.pago === 'cuota') {
+                const dataCuota = {
+                    venta_id: id,
+                    cantidad: datosParseados.cuotas,
+                    valor_cuota: data[0]['valor_cuota'],
+                    total: datosParseados.cuotas * data[0]['valor_cuota']
+                }
+                await createCuota(dataCuota);
+            }
+            else if (datosParseados.pago === 'abono') {
+                const dataAbono = {
+                    valor: datosParseados.abono,
+                    venta_id: id
+                }
+                await createAbono(dataAbono);
+            }
+            else if (datosParseados.pago === 'siguiente dia') {
+                const dataSiguienteDia = {
+                    venta_id: id
+                }
+                await createSiguienteDia(dataSiguienteDia);
+            }
+            else if (datosParseados.pago === 'no pago') {
+                const dataAbono = {
+                    valor: 0,
+                    venta_id: id
+                }
+                await createAbono(dataAbono);
             }
 
-            await createCuota(dataCuota);
+            router.push("/");
+        } catch (error) {
+            console.error("Error al procesar el pago:", error);
+            // Aquí podrías mostrar un mensaje de error al usuario
         }
-        if (datosParseados.pago === 'abono') {
-            const dataAbono = {
-                valor: datosParseados.abono,
-                venta_id: id
-            }
-            await createAbono(dataAbono);
-        }
-
-        router.push("/");
     }
 
     const pagoSeleccionado = watch("pago");
