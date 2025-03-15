@@ -64,6 +64,7 @@ export async function getDataCuotas(idVenta) {
             valor_cuota,
             cuotas,
             cliente_id,
+            created_at,
             cliente(
                 nombre,
                 telefono,
@@ -78,7 +79,11 @@ export async function getDataCuotas(idVenta) {
                 id,
                 venta_id,
                 cantidad
-            )`)
+            ),
+            no_pago(
+                id
+            )`
+        )
         .eq('id', idVenta)
 
     if (error) throw error
@@ -448,4 +453,24 @@ export async function createNoPago(ventaId) {
 
     if (error) throw error;
     return true;
+}
+
+export async function getNoPagosCount(ventaId) {
+    const { count, error } = await supabase
+        .from('no_pago')
+        .select('id', { count: 'exact' })
+        .eq('id', ventaId);
+
+    if (error) throw error;
+    return count;
+}
+
+export async function getSaldos(ventaId) {
+    const { data, error } = await supabase
+        .from('saldos')
+        .select('*')
+        .eq('id', ventaId);
+
+    if (error) throw error;
+    return data;
 }

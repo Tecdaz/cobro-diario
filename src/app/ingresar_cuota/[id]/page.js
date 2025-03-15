@@ -5,7 +5,7 @@ import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
-import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago } from "@/lib/db";
+import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago, getSaldos } from "@/lib/db";
 import { useParams, useRouter } from "next/navigation";
 import SelectField from "@/components/SelectField";
 import Link from "next/link";
@@ -22,7 +22,8 @@ export default function Page() {
             valor_cuota: 0,
             cuotas: 0,
             cuota: [],
-            abono: []
+            abono: [],
+            no_pago: []
         }
     ]);
 
@@ -48,14 +49,6 @@ export default function Page() {
 
     const watchedValues = watch(["cuotas", "abono", "pago"]);
 
-
-    const calculateSaldo = (valorCuota, numeroCuotas, abonos, cuotas) => {
-        const abonosTotal = abonos.reduce((acc, abono) => acc + abono.valor, 0);
-        const cuotasTotal = cuotas.reduce((acc, cuota) => acc + cuota.cantidad, 0);
-
-        return (valorCuota * numeroCuotas) - abonosTotal - (valorCuota * cuotasTotal);
-    }
-
     const params = useParams();
     const { id } = params;
     // console.log("Id", id);
@@ -67,15 +60,12 @@ export default function Page() {
                 try {
 
                     const dataFetched = await getDataCuotas(id);
+                    const saldo = await getSaldos(id);
                     console.log({ dataFetched });
                     setData(dataFetched);
+                    setSaldoActual(saldo[0]['saldo']);
                     setValue("totalVenta", dataFetched[0]['cuotas'] * dataFetched[0]['valor_cuota']);
-                    setValue("saldoActual", calculateSaldo(
-                        dataFetched[0]['valor_cuota'],
-                        dataFetched[0]['cuotas'],
-                        dataFetched[0]['abono'],
-                        dataFetched[0]['cuota']
-                    ));
+                    setValue("saldoActual", saldo[0]['saldo']);
                 }
                 catch (error) {
                     console.log("Error", error);
@@ -95,14 +85,6 @@ export default function Page() {
             setValue("cuotas", ''); // Reinicia el valor de cuotas solo si no es 0
         }
 
-        const saldoActual = data.length > 0 ? calculateSaldo(
-            data[0]['valor_cuota'],
-            data[0]['cuotas'],
-            data[0]['abono'],
-            data[0]['cuota']
-        ) : 0;
-        setSaldoActual(saldoActual);
-
         if (pagoActual === "cuota") {
             const numCuotas = parseInt(watchedValues[0] || 0);
             const valorCuota = data.length > 0 ? data[0]['valor_cuota'] : 0;
@@ -116,7 +98,7 @@ export default function Page() {
             setNuevoSaldo(saldoActual);
             setValue("nuevoSaldo", saldoActual);
         }
-    }, [watchedValues, data, setValue]);
+    }, [watchedValues, data, setValue, saldoActual]);
 
     const onSubmit = async (dataForm) => {
         const datosParseados = {
@@ -171,17 +153,67 @@ export default function Page() {
 
     const pagoSeleccionado = watch("pago");
     return (
-        <div className="flex flex-col gap-2 p-4 min-h-full h-fit justify-between">
-            <h2>{data[0]['cliente']['nombre']}</h2>
-            <p>Valor cuota: {data[0]['valor_cuota']}</p>
-            <p>Cuotas pagadas: {data[0]['cuota'].length}</p>
-            <p>Cuotas pendientes: {data[0]['cuotas'] - data[0]['cuota'].length}</p>
-            <p>Cuotas atrasadas: </p>
+        <div className="flex flex-col gap-4 p-4 min-h-full h-fit justify-between">
+            {/* Información del Cliente */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+                <h2 className="text-xl font-semibold mb-4">{data[0].cliente.nombre}</h2>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-gray-600">Teléfono:</p>
+                        <p className="font-medium">{data[0].cliente.telefono}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Dirección:</p>
+                        <p className="font-medium">{data[0].cliente.direccion}</p>
+                    </div>
+                </div>
+            </div>
 
-            <p>Telefono: {data[0]['cliente']['telefono']}</p>
-            <p>Direccion: {data[0]['cliente']['direccion']}</p>
+            {/* Estado del Crédito */}
+            <div className="bg-white rounded-lg shadow-sm p-4">
+                <h3 className="text-lg font-semibold mb-3">Estado del Crédito</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p className="text-gray-600">Valor cuota:</p>
+                        <p className="font-medium">{new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(data[0].valor_cuota)}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Total cuotas:</p>
+                        <p className="font-medium">{data[0].cuotas}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Fecha otorgamiento:</p>
+                        <p className="font-medium">{new Date(data[0].created_at).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Saldo actual:</p>
+                        <p className="font-medium">{new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0 }).format(saldoActual)}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Cuotas pagadas:</p>
+                        <p className="font-medium">{data[0].cuota.length}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Cuotas pendientes:</p>
+                        <p className="font-medium">{data[0].cuotas - data[0].cuota.length}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">No pagos:</p>
+                        <p className="font-medium text-red-600">{data[0].no_pago?.length || 0}</p>
+                    </div>
+                    <div>
+                        <p className="text-gray-600">Abonos realizados:</p>
+                        <p className="font-medium">{data[0].abono.length}</p>
+                    </div>
+                </div>
+            </div>
 
-            <hr />
+            <hr className="border-gray-200" />
+
             <form className="flex flex-col gap-2 flex-1 justify-between" onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-2 gap-1">
                     <InputRadio register={register} label="Cuota" name="pago" value="cuota" />
