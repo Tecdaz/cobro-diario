@@ -203,7 +203,7 @@ export default function Page() {
                     </div>
                     <div>
                         <p className="text-gray-600">No pagos:</p>
-                        <p className="font-medium text-red-600">{data[0].no_pago?.length || 0}</p>
+                        <p className="font-medium text-red-600">{data[0].no_pago ? data[0].no_pago.length : 0}</p>
                     </div>
                     <div>
                         <p className="text-gray-600">Abonos realizados:</p>

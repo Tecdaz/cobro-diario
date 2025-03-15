@@ -81,7 +81,7 @@ export async function getDataCuotas(idVenta) {
                 cantidad
             ),
             no_pago(
-                id
+                id_venta
             )`
         )
         .eq('id', idVenta)
@@ -448,7 +448,7 @@ export async function createNoPago(ventaId) {
     const { error } = await supabase
         .from('no_pago')
         .insert({
-            id: ventaId
+            id_venta: ventaId
         });
 
     if (error) throw error;
