@@ -18,6 +18,7 @@ export default function Header() {
         { title: "Ventas de Hoy", href: "/ventas_nuevas" },
         { title: "Renovar Venta", href: "/renovar_venta" },
         { title: "Gestión Gastos", href: "/gestion_gastos" },
+        { title: "Ventas otras fechas", href: "/ventas_otra_fecha" },
     ]
 
     // Cerrar el menú cuando cambia la ruta

@@ -399,3 +399,42 @@ export async function createSiguienteDia(data) {
     if (error) throw error;
     return true;
 }
+
+export async function getVentasOtrasFechas() {
+    // Primero obtenemos los IDs de las ventas que están en cobros_hoy y ventas_para_cobrar
+    const { data: ventasExcluidas, error: errorExcluidas } = await supabase
+        .from('ventas_para_cobrar')
+        .select('id');
+
+    const { data: cobrosExcluidos, error: errorCobros } = await supabase
+        .from('cobros_hoy')
+        .select('id');
+
+    if (errorExcluidas) throw errorExcluidas;
+    if (errorCobros) throw errorCobros;
+
+    // Combinamos los IDs a excluir
+    const idsExcluidos = [
+        ...(ventasExcluidas || []).map(v => v.id),
+        ...(cobrosExcluidos || []).map(c => c.id)
+    ];
+
+    console.log("Ids Excluidos", idsExcluidos);
+
+    // Luego obtenemos todas las ventas que no están en esa lista
+    const { data, error } = await supabase
+        .from('ventas_otras_fechas')
+        .select(`
+            *,
+            cliente (
+                nombre,
+                telefono,
+                direccion,
+                documento
+            )
+        `);
+
+    console.log("Error", error);
+    if (error) throw error;
+    return data;
+}
