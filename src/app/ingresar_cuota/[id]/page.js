@@ -5,7 +5,7 @@ import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
-import { getDataCuotas, createAbono, createCuota, createSiguienteDia } from "@/lib/db";
+import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago } from "@/lib/db";
 import { useParams, useRouter } from "next/navigation";
 import SelectField from "@/components/SelectField";
 import Link from "next/link";
@@ -159,11 +159,7 @@ export default function Page() {
                 await createSiguienteDia(dataSiguienteDia);
             }
             else if (datosParseados.pago === 'no pago') {
-                const dataAbono = {
-                    valor: 0,
-                    venta_id: id
-                }
-                await createAbono(dataAbono);
+                await createNoPago(id);
             }
 
             router.push("/");

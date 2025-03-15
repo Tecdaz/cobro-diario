@@ -438,3 +438,14 @@ export async function getVentasOtrasFechas() {
     if (error) throw error;
     return data;
 }
+
+export async function createNoPago(ventaId) {
+    const { error } = await supabase
+        .from('no_pago')
+        .insert({
+            id: ventaId
+        });
+
+    if (error) throw error;
+    return true;
+}
