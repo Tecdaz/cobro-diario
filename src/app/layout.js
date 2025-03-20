@@ -3,6 +3,7 @@ import "./globals.css";
 import NavBar from "@/components/NavBar";
 import Header from "@/components/Header";
 import { LayoutProvider } from "@/contexts/LayoutContext";
+import NavigationModal from "@/components/NavigationModal";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,11 +28,11 @@ export default function RootLayout({ children }) {
           className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
         >
           <Header />
+          <NavigationModal />
           <main className="overflow-auto mt-10 mb-16 flex-1">{children}</main>
           <NavBar />
         </body>
       </html>
     </LayoutProvider>
-
   );
 }

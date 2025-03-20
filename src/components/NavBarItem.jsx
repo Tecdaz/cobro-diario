@@ -2,12 +2,20 @@
 import { useLayout } from "@/contexts/LayoutContext"
 
 export default function NavBarItem(props) {
-    const { pathName } = useLayout()
-
-
+    const { pathName, handleNavigation } = useLayout()
     const { children, href } = props
+
+    const handleClick = (e) => {
+        e.preventDefault();
+        handleNavigation(href);
+    }
+
     return (
-        <a href={href} className={`h-full w-full bg-orange-400 flex justify-center items-center ${pathName === href ? "text-white" : "text-black"}`}>
+        <a
+            href={href}
+            onClick={handleClick}
+            className={`h-full w-full bg-orange-400 flex justify-center items-center ${pathName === href ? "text-white" : "text-black"}`}
+        >
             {children}
         </a>
     )

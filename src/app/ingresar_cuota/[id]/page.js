@@ -11,7 +11,7 @@ import SelectField from "@/components/SelectField";
 import Link from "next/link";
 
 export default function Page() {
-    const { handleTitleChange } = useLayout();
+    const { handleTitleChange, setRequireConfirmation, handleNavigation } = useLayout();
     const [data, setData] = useState([
         {
             cliente: {
@@ -30,6 +30,7 @@ export default function Page() {
     const router = useRouter();
     const [nuevoSaldo, setNuevoSaldo] = useState(0);
     const [saldoActual, setSaldoActual] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         defaultValues: {
@@ -54,6 +55,7 @@ export default function Page() {
     // console.log("Id", id);
     useEffect(() => {
         handleTitleChange("Ingresar cuota")
+        setRequireConfirmation(true); // Activar la confirmación al navegar
         // console.log("Id", id);
         if (id) {
             const fetchData = async () => {
@@ -74,7 +76,10 @@ export default function Page() {
             fetchData();
         }
 
-    }, [id, handleTitleChange, setValue]);
+        return () => {
+            setRequireConfirmation(false); // Desactivar al desmontar el componente
+        };
+    }, [id, handleTitleChange, setValue, setRequireConfirmation]);
 
     useEffect(() => {
         const pagoActual = watchedValues[2]; // valor de pago
@@ -101,6 +106,7 @@ export default function Page() {
     }, [watchedValues, data, setValue, saldoActual]);
 
     const onSubmit = async (dataForm) => {
+        setIsLoading(true);
         const datosParseados = {
             ...dataForm,
             cuotas: dataForm.cuotas ? parseInt(dataForm.cuotas) : 0,
@@ -112,6 +118,7 @@ export default function Page() {
 
         if (datosParseados.nuevoSaldo < 0) {
             console.log("El nuevo saldo no puede ser negativo. Por favor, ingresa un valor válido de cuotas o abono.");
+            setIsLoading(false);
             return;
         }
 
@@ -138,15 +145,24 @@ export default function Page() {
                 const dataSiguienteDia = {
                     venta_id: id
                 }
+                await createAbono({
+                    valor: 0,
+                    venta_id: id
+                })
                 await createSiguienteDia(dataSiguienteDia);
             }
             else if (datosParseados.pago === 'no pago') {
+                await createAbono({
+                    valor: 0,
+                    venta_id: id
+                })
                 await createNoPago(id);
             }
 
-            router.push("/");
+            handleNavigation("/");
         } catch (error) {
             console.error("Error al procesar el pago:", error);
+            setIsLoading(false);
             // Aquí podrías mostrar un mensaje de error al usuario
         }
     }
@@ -255,15 +271,35 @@ export default function Page() {
                 )}
 
 
-                <div className="flex-1 flex flex-col  justify-end">
+                <div className="flex-1 flex flex-col justify-end">
                     <div className="flex gap-4 items-center">
-                        <Link href="/" className="w-full">
-                            <button className="border-gray-500 border-2 p-2 rounded-md mt-2 w-full">Cancelar</button>
-                        </Link>
+                        <button
+                            type="button"
+                            onClick={() => handleNavigation("/")}
+                            className="border-gray-500 border-2 p-2 rounded-md mt-2 w-full"
+                            disabled={isLoading}
+                        >
+                            Cancelar
+                        </button>
 
-                        <button className="bg-blue-500 text-white p-2 rounded-md mt-2 w-full" onClick={handleSubmit(onSubmit)}>Registrar cuota</button>
+                        <button
+                            className={`${isLoading ? 'bg-blue-300' : 'bg-blue-500'} text-white p-2 rounded-md mt-2 w-full flex justify-center items-center gap-2`}
+                            onClick={handleSubmit(onSubmit)}
+                            disabled={isLoading}
+                        >
+                            {isLoading ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Procesando...
+                                </>
+                            ) : (
+                                'Registrar cuota'
+                            )}
+                        </button>
                     </div>
-
                 </div>
 
             </form>
