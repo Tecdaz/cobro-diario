@@ -159,7 +159,6 @@ export default function Page() {
                 await createNoPago(id);
             }
 
-            handleNavigation("/");
         } catch (error) {
             console.error("Error al procesar el pago:", error);
             setIsLoading(false);
