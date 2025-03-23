@@ -5,9 +5,11 @@ import { useLayout } from '@/contexts/LayoutContext';
 import { getClients } from '@/lib/db';
 import ClientCard from '@/components/ClientCard';
 import SearchBar from '@/components/SearchBar';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function page() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth();
     const [clients, setClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -19,7 +21,7 @@ export default function page() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const clients = await getClients();
+                const clients = await getClients(user, cartera.id_cartera);
                 setClients(clients || []);
                 setFilteredClients(clients || []);
             } catch (error) {

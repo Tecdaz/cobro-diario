@@ -16,7 +16,7 @@ export default function Dashboard() {
 
     const handleVrfChange = () => {
         setVrfActive(!vrfActive);
-        console.log("Vrf", !vrfActive);
+
     }
 
     const handleSearch = (term) => {
@@ -42,27 +42,27 @@ export default function Dashboard() {
         const fetchData = async () => {
             try {
                 if (vrfActive) {
-                    const dataFetch = await getTodayPayments();
-                    console.log("Data", dataFetch);
+                    const dataFetch = await getTodayPayments(user, cartera.id_cartera);
+
                     setData(dataFetch);
                     setFilteredData(dataFetch);
                 }
                 else {
-                    const dataFetch = await getTodayCobros();
-                    console.log("Data", dataFetch);
+                    const dataFetch = await getTodayCobros(user, cartera.id_cartera);
+
                     setData(dataFetch);
                     setFilteredData(dataFetch);
                 }
             }
             catch (error) {
-                console.log("Error", error);
+
             }
         }
         fetchData();
 
     }, [vrfActive, setCartera, user]);
 
-    console.log(cartera)
+
     return (
         <div className="flex flex-col">
             <div className="h-16 p-4 flex items-center gap-4 justify-between w-full">

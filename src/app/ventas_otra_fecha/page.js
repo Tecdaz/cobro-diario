@@ -4,9 +4,11 @@ import SearchBar from "@/components/SearchBar";
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getVentasOtrasFechas } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function VentasOtraFecha() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth();
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -20,8 +22,8 @@ export default function VentasOtraFecha() {
 
         const searchTermLower = term.toLowerCase();
         const filtered = data.filter(venta =>
-            venta.cliente.nombre?.toLowerCase().includes(searchTermLower) ||
-            venta.cliente.direccion?.toLowerCase().includes(searchTermLower)
+            venta.nombre?.toLowerCase().includes(searchTermLower) ||
+            venta.direccion?.toLowerCase().includes(searchTermLower)
         );
         setFilteredData(filtered);
     }
@@ -33,12 +35,12 @@ export default function VentasOtraFecha() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const dataFetch = await getVentasOtrasFechas();
+                const dataFetch = await getVentasOtrasFechas(user, cartera.id_cartera);
                 setData(dataFetch);
                 setFilteredData(dataFetch);
             }
             catch (error) {
-                console.log("Error", error);
+
             }
         }
         fetchData();
@@ -61,10 +63,10 @@ export default function VentasOtraFecha() {
                         className={index % 2 === 0 && "bg-gray-50"}
                         data={{
                             ...venta,
-                            nombre: venta.cliente.nombre,
-                            direccion: venta.cliente.direccion,
-                            telefono: venta.cliente.telefono,
-                            documento: venta.cliente.documento
+                            nombre: venta.nombre,
+                            direccion: venta.direccion,
+                            telefono: venta.telefono,
+                            documento: venta.documento
                         }}
                     />
                 ))

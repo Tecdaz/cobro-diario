@@ -7,20 +7,24 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-export async function getTodayCobros() {
+export async function getTodayCobros(user, carteraId) {
     const { data, error } = await supabase
         .from('ventas_para_cobrar')
         .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
         .order('nombre')
 
     if (error) throw error
     return data
 }
 
-export async function getTodayPayments() {
+export async function getTodayPayments(user, carteraId) {
     const { data, error } = await supabase
         .from('cobros_hoy')
         .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
         .order('nombre')
 
     if (error) throw error
@@ -41,8 +45,8 @@ export async function createClientData(clientData) {
         .from('cliente')
         .insert(clientData)
         .select();
-    console.log("Data", data);
-    console.log("Error", error);
+    ;
+    ;
     return data
 }
 
@@ -51,7 +55,7 @@ export async function createVentaData(ventaData) {
         .from('venta')
         .insert(ventaData)
 
-    console.log("error", error);
+        ;
     if (error) throw error
     return data
 }
@@ -142,17 +146,20 @@ export async function createGasto(gastoData) {
     return data
 }
 
-export async function totalClientes() {
+export async function totalClientes(user, carteraId) {
     const { count, error } = await supabase
         .from('cliente')
         .select('id', { count: 'exact' })
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
+
 
 
     if (error) throw error
     return count
 }
 
-export async function clientesHoy() {
+export async function clientesHoy(user, carteraId) {
     const startOfDay = getStartOfTheDay()
     const endOfDay = getEndOfTheDay()
 
@@ -161,24 +168,19 @@ export async function clientesHoy() {
         .select('id', { count: 'exact' })
         .gte('created_at', startOfDay.toISOString())
         .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
 
     if (error) throw error
     return count
 }
 
-export async function getPaymentsRegistered() {
-    const { count, error } = await supabase
-        .from('cobros_hoy')
-        .select('id', { count: 'exact' })
-
-    if (error) throw error
-    return count
-}
-
-export async function getClients() {
+export async function getClients(user, carteraId) {
     const { data, error } = await supabase
         .from('cliente')
         .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (error) throw error
     return data
@@ -258,7 +260,7 @@ export async function deleteVenta(ventaId) {
     return true;
 }
 
-export async function getResumenDiario() {
+export async function getResumenDiario(user, carteraId) {
     const startOfDay = getStartOfTheDay()
     const endOfDay = getEndOfTheDay()
 
@@ -267,39 +269,51 @@ export async function getResumenDiario() {
         .from('venta')
         .select('precio, valor_cuota, cuotas')
         .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString());
+        .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (errorVentas) throw errorVentas;
 
     // Obtener cobros del día usando la vista cobros_hoy
     const { data: cobrosHoy, error: errorCobros } = await supabase
         .from('cobros_hoy')
-        .select('valor_cuota, saldo');
+        .select('valor_cuota, saldo')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (errorCobros) throw errorCobros;
 
     // Obtener total de cobros por realizar hoy
     const { data: cobrosPorRealizar, error: errorCobrosPorRealizar } = await supabase
         .from('ventas_para_cobrar')
-        .select('*');
+        .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (errorCobrosPorRealizar) throw errorCobrosPorRealizar;
 
     // Obtener abonos del día
     const { data: abonosHoy, error: errorAbonos } = await supabase
         .from('abono')
-        .select('valor')
+        .select('valor, venta(cobrador, id_cartera)')
         .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString());
+        .lte('created_at', endOfDay.toISOString())
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId)
+        .not('venta', 'is', null)
 
     if (errorAbonos) throw errorAbonos;
 
     // Obtener cuotas del día
     const { data: cuotasHoy, error: errorCuotas } = await supabase
         .from('cuota')
-        .select('total')
+        .select('total, venta(cobrador, id_cartera)')
         .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString());
+        .lte('created_at', endOfDay.toISOString())
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId)
+        .not('venta', 'is', null)
 
     if (errorCuotas) throw errorCuotas;
 
@@ -308,7 +322,9 @@ export async function getResumenDiario() {
         .from('gastos_ingresos')
         .select('*')
         .gte('created_at', startOfDay.toISOString())
-        .lte('created_at', endOfDay.toISOString());
+        .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (errorGastos) throw errorGastos;
 
@@ -338,22 +354,28 @@ export async function getResumenDiario() {
     };
 }
 
-export async function getCajaInicial() {
+export async function getCajaInicial(user, carteraId) {
     const today = getStartOfTheDay();
 
     // Obtener todos los abonos históricos excepto hoy
     const { data: abonosHistoricos, error: errorAbonos } = await supabase
         .from('abono')
-        .select('valor')
-        .lt('created_at', today.toISOString());
+        .select('valor, venta(cobrador, id_cartera)')
+        .lt('created_at', today.toISOString())
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId)
+        .not('venta', 'is', null);
 
     if (errorAbonos) throw errorAbonos;
 
     // Obtener todas las cuotas históricas excepto hoy
     const { data: cuotasHistoricas, error: errorCuotas } = await supabase
         .from('cuota')
-        .select('total')
-        .lt('created_at', today.toISOString());
+        .select('total, venta(cobrador, id_cartera)')
+        .lt('created_at', today.toISOString())
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId)
+        .not('venta', 'is', null);
 
     if (errorCuotas) throw errorCuotas;
 
@@ -361,7 +383,10 @@ export async function getCajaInicial() {
     const { data: movimientosHistoricos, error: errorMovimientos } = await supabase
         .from('gastos_ingresos')
         .select('*')
-        .lt('created_at', today.toISOString());
+        .lt('created_at', today.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
+
 
     if (errorMovimientos) throw errorMovimientos;
 
@@ -369,7 +394,9 @@ export async function getCajaInicial() {
     const { data: ventasHistoricas, error: errorVentas } = await supabase
         .from('venta')
         .select('precio')
-        .lt('created_at', today.toISOString());
+        .lt('created_at', today.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
     if (errorVentas) throw errorVentas;
 
@@ -405,41 +432,15 @@ export async function createSiguienteDia(data) {
     return true;
 }
 
-export async function getVentasOtrasFechas() {
-    // Primero obtenemos los IDs de las ventas que están en cobros_hoy y ventas_para_cobrar
-    const { data: ventasExcluidas, error: errorExcluidas } = await supabase
-        .from('ventas_para_cobrar')
-        .select('id');
+export async function getVentasOtrasFechas(user, carteraId) {
 
-    const { data: cobrosExcluidos, error: errorCobros } = await supabase
-        .from('cobros_hoy')
-        .select('id');
-
-    if (errorExcluidas) throw errorExcluidas;
-    if (errorCobros) throw errorCobros;
-
-    // Combinamos los IDs a excluir
-    const idsExcluidos = [
-        ...(ventasExcluidas || []).map(v => v.id),
-        ...(cobrosExcluidos || []).map(c => c.id)
-    ];
-
-    console.log("Ids Excluidos", idsExcluidos);
-
-    // Luego obtenemos todas las ventas que no están en esa lista
     const { data, error } = await supabase
         .from('ventas_otras_fechas')
-        .select(`
-            *,
-            cliente (
-                nombre,
-                telefono,
-                direccion,
-                documento
-            )
-        `);
+        .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
 
-    console.log("Error", error);
+    ;
     if (error) throw error;
     return data;
 }
@@ -485,7 +486,7 @@ export async function getCartera(userId) {
         .single();
 
     if (error) throw error;
-    console.log(data)
+
     return data;
 }
 

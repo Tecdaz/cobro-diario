@@ -7,8 +7,10 @@ import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { createGasto } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
 export default function GestionGastos() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth();
     useEffect(() => {
         handleTitleChange("Gestion de Gastos")
     }, [handleTitleChange])
@@ -28,11 +30,16 @@ export default function GestionGastos() {
 
     const onSubmit = async (data) => {
         try {
+            data = {
+                ...data,
+                cobrador: user.id,
+                id_cartera: cartera.id_cartera
+            }
             await createGasto(data);
             router.push('/');
         }
         catch (error) {
-            console.log("Error", error);
+
         }
     }
     return (

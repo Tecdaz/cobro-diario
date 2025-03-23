@@ -5,10 +5,11 @@ import { useLayout } from '@/contexts/LayoutContext';
 import { getClients } from '@/lib/db';
 import ClientCard from '@/components/ClientCard';
 import SearchBar from '@/components/SearchBar';
-import ProtectedRoute from '@/components/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Clientes() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth();
     const [clients, setClients] = useState([]);
     const [filteredClients, setFilteredClients] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function Clientes() {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const clients = await getClients();
+                const clients = await getClients(user, cartera.id_cartera);
                 setClients(clients || []);
                 setFilteredClients(clients || []);
             } catch (error) {
@@ -50,36 +51,39 @@ export default function Clientes() {
     };
 
     return (
-        <ProtectedRoute>
-            {isLoading ? (
-                <div className="flex justify-center items-center min-h-screen">
-                    <div className="text-lg">Cargando clientes...</div>
-                </div>
-            ) : (
-                <div className="flex flex-col min-h-screen bg-gray-50">
-                    <div className="bg-white shadow-sm p-4">
-                        <SearchBar onSearch={handleSearch} />
-                    </div>
+        <>
 
-                    {!filteredClients.length ? (
-                        <div className="flex justify-center items-center flex-1 p-4">
-                            <div className="text-lg text-gray-500">
-                                {searchTerm ? "No se encontraron clientes" : "No hay clientes registrados"}
+            {
+                isLoading ? (
+                    <div className="flex justify-center items-center min-h-screen" >
+                        <div className="text-lg">Cargando clientes...</div>
+                    </div>
+                ) : (
+                    <div className="flex flex-col min-h-screen bg-gray-50">
+                        <div className="bg-white shadow-sm p-4">
+                            <SearchBar onSearch={handleSearch} />
+                        </div>
+
+                        {!filteredClients.length ? (
+                            <div className="flex justify-center items-center flex-1 p-4">
+                                <div className="text-lg text-gray-500">
+                                    {searchTerm ? "No se encontraron clientes" : "No hay clientes registrados"}
+                                </div>
                             </div>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col p-4 gap-2">
-                            {filteredClients.map((client) => (
-                                <ClientCard
-                                    key={client.id}
-                                    href={`/clientes/${client.id}`}
-                                    client={client}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-        </ProtectedRoute>
+                        ) : (
+                            <div className="flex flex-col p-4 gap-2">
+                                {filteredClients.map((client) => (
+                                    <ClientCard
+                                        key={client.id}
+                                        href={`/clientes/${client.id}`}
+                                        client={client}
+                                    />
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+        </>
     );
 } 

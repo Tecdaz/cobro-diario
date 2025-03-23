@@ -25,12 +25,12 @@ export default function Carteras() {
             try {
                 // Solo ejecutar si el usuario existe
                 if (user && user.id) {
-                    console.log("Obteniendo carteras para usuario:", user.id)
+
                     const carterasQuery = await getCarterasByUser(user.id)
-                    console.log("Carteras obtenidas:", carterasQuery)
+
                     setCarteras(carterasQuery || [])
                 } else {
-                    console.log("Usuario no disponible aún")
+
                 }
             } catch (error) {
                 console.error("Error al obtener carteras:", error)
@@ -45,7 +45,7 @@ export default function Carteras() {
 
     const handlePick = (cartera) => {
         return () => { // Retornamos una función (callback) para onClick
-            console.log("Cartera seleccionada:", cartera)
+
             setCartera(cartera)
             // Actualiza y recarga la página actual
             router.refresh()
@@ -78,13 +78,13 @@ export default function Carteras() {
     if (loading) return <div>Cargando carteras...</div>
 
     // Acceder a carteras solo cuando existan datos
-    console.log("Carteras en el componente:", carteras)
+
 
     const defaultCartera = carteras.length > 0
         ? carteras.find(cartera => cartera.default === true)
         : null
 
-    console.log("Cartera por defecto:", defaultCartera)
+
     return (
         <div className="flex flex-col p-4 gap-4">
             <div className="flex flex-col">

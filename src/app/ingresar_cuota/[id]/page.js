@@ -52,25 +52,25 @@ export default function Page() {
 
     const params = useParams();
     const { id } = params;
-    // console.log("Id", id);
+    // 
     useEffect(() => {
         handleTitleChange("Ingresar cuota")
         setRequireConfirmation(true); // Activar la confirmación al navegar
-        // console.log("Id", id);
+        // 
         if (id) {
             const fetchData = async () => {
                 try {
 
                     const dataFetched = await getDataCuotas(id);
                     const saldo = await getSaldos(id);
-                    console.log({ dataFetched });
+
                     setData(dataFetched);
                     setSaldoActual(saldo[0]['saldo']);
                     setValue("totalVenta", dataFetched[0]['cuotas'] * dataFetched[0]['valor_cuota']);
                     setValue("saldoActual", saldo[0]['saldo']);
                 }
                 catch (error) {
-                    console.log("Error", error);
+
                 }
             }
             fetchData();
@@ -117,13 +117,13 @@ export default function Page() {
         }
 
         if (datosParseados.nuevoSaldo < 0) {
-            console.log("El nuevo saldo no puede ser negativo. Por favor, ingresa un valor válido de cuotas o abono.");
+
             setIsLoading(false);
             return;
         }
 
         try {
-            console.log("Datos enviados:", datosParseados);
+
 
             if (datosParseados.pago === 'cuota') {
                 const dataCuota = {

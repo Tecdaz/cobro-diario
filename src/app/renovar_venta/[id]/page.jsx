@@ -7,9 +7,11 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { getClientData, createVentaData } from "@/lib/db";
 import SelectField from "@/components/SelectField";
 import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RenovarVenta() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth()
     const params = useParams();
     const router = useRouter();
     const { id } = params;
@@ -86,12 +88,13 @@ export default function RenovarVenta() {
                 cuotas: data.numeroCuotas,
                 valor_cuota: data.valorCuota,
                 frecuencia: data.frecuencia,
-                dia_semana: 1,
                 activa: true,
+                cobrador: user.id,
+                id_cartera: cartera.id_cartera
             }
 
             await createVentaData(ventaData);
-            console.log("Venta renovada:", ventaData);
+
             router.push("/");
         } catch (error) {
             console.error("Error al renovar venta:", error);

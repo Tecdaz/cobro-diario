@@ -3,9 +3,11 @@
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getResumenDiario, getCajaInicial, totalClientes, clientesHoy } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Resumen() {
     const { handleTitleChange } = useLayout();
+    const { user, cartera } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
     const [resumen, setResumen] = useState(null);
     const [cajaInicial, setCajaInicial] = useState(0);
@@ -20,10 +22,10 @@ export default function Resumen() {
             try {
                 setIsLoading(true);
                 const [resumenData, cajaInicialData, totalClientesData, clientesNuevosData] = await Promise.all([
-                    getResumenDiario(),
-                    getCajaInicial(),
-                    totalClientes(),
-                    clientesHoy()
+                    getResumenDiario(user, cartera.id_cartera),
+                    getCajaInicial(user, cartera.id_cartera),
+                    totalClientes(user, cartera.id_cartera),
+                    clientesHoy(user, cartera.id_cartera)
                 ]);
                 setResumen(resumenData);
                 setCajaInicial(cajaInicialData);

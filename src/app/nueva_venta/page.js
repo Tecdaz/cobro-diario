@@ -8,9 +8,11 @@ import { createClientData, createVentaData } from "@/lib/db";
 import { Watch } from "lucide-react";
 import SelectField from "@/components/SelectField";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function NuevaVenta() {
     const { handleTitleChange, setRequireConfirmation } = useLayout();
+    const { cartera, user } = useAuth()
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             producto: "Credito"
@@ -29,7 +31,7 @@ export default function NuevaVenta() {
         const { name, value } = e.target;
         const numericValue = value === "" ? 0 : Number(value);
 
-        console.log({ name, value, numeroCuotas, valorCuota, numericValue });
+
 
 
         if (name === 'numeroCuotas') {
@@ -67,16 +69,18 @@ export default function NuevaVenta() {
 
     const onSubmit = async (data) => {
         try {
-            console.log("Datos enviados:", data);
+
 
             const clienteData = await createClientData({
                 documento: data.documento,
                 nombre: data.nombre,
                 telefono: data.telefono,
                 direccion: data.direccion,
+                id_cartera: cartera.id_cartera,
+                cobrador: user.id
             });
 
-            console.log("Cliente creado:", clienteData);
+
             const idCliente = clienteData[0].id;
 
             const ventaData = {
@@ -86,12 +90,13 @@ export default function NuevaVenta() {
                 cuotas: data.numeroCuotas,
                 valor_cuota: data.valorCuota,
                 frecuencia: data.frecuencia,
-                dia_semana: 1,
                 activa: true,
+                cobrador: user.id,
+                id_cartera: cartera.id_cartera
             }
 
             await createVentaData(ventaData);
-            console.log("Venta creada:", ventaData);
+
             // Redireccionar al inicio
             router.push("/");
         }
