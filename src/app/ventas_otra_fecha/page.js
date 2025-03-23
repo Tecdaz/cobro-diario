@@ -44,7 +44,7 @@ export default function VentasOtraFecha() {
             }
         }
         fetchData();
-    }, []);
+    }, [user, cartera.id_cartera]);
 
     return (
         <div className="flex flex-col">
