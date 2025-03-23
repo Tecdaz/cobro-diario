@@ -8,6 +8,8 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { createGasto } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
+import SelectField from "@/components/SelectField";
+
 export default function GestionGastos() {
     const { handleTitleChange } = useLayout();
     const { user, cartera } = useAuth();
@@ -55,7 +57,24 @@ export default function GestionGastos() {
                     <InputRadio register={register} name="tipo" value="ingreso" label="Ingreso" />
                 </div>
                 <InputField register={register} label="Valor" name="valor" type="number" errors={errors} />
-                <InputField register={register} label="Descripcion" name="descripcion" errors={errors} />
+                <SelectField
+                    label="Descripción"
+                    name="descripcion"
+                    register={register}
+                    required={true}
+                    errors={errors}
+                    options={[
+                        { value: "gasolina", label: "Gasolina" },
+                        { value: "comida", label: "Comida" },
+                        { value: "transporte", label: "Transporte" },
+                        { value: "papeleria", label: "Papelería" },
+                        { value: "mantenimiento", label: "Mantenimiento vehículo" },
+                        { value: "comunicacion", label: "Recargas/Plan de datos" },
+                        { value: "parqueadero", label: "Parqueadero" },
+                        { value: "otro", label: "Otro" }
+                    ]}
+                />
+                <InputField register={register} label="Observación (opcional)" name="observacion" errors={errors} />
             </form>
         </div>
     )
