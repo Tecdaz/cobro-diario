@@ -77,15 +77,19 @@ export async function getDataCuotas(idVenta) {
             abono(
                 id,
                 valor,
-                venta_id    
+                venta_id,
+                created_at
             ),
             cuota(
                 id,
                 venta_id,
-                cantidad
+                cantidad,
+                created_at
             ),
             no_pago(
-                id_venta
+                id,
+                id_venta,
+                created_at
             )`
         )
         .eq('id', idVenta)
@@ -137,13 +141,20 @@ export async function createCuota(cuotaData) {
     return data;
 }
 
-export async function createGasto(gastoData) {
-    const { data, error } = await supabase
+export async function createGasto(data) {
+    const { error } = await supabase
         .from('gastos_ingresos')
-        .insert(gastoData)
+        .insert({
+            valor: data.valor,
+            tipo: data.tipo,
+            descripcion: data.descripcion,
+            observacion: data.observacion,
+            cobrador: data.cobrador,
+            id_cartera: data.id_cartera
+        });
 
-    if (error) throw error
-    return data
+    if (error) throw error;
+    return true;
 }
 
 export async function totalClientes(user, carteraId) {
@@ -251,13 +262,53 @@ export async function updateVentaData(ventaId, ventaData) {
 }
 
 export async function deleteVenta(ventaId) {
+    // Primero obtenemos la información de la venta para saber el cliente_id
+    const { data: venta, error: errorVenta } = await supabase
+        .from('venta')
+        .select('cliente_id')
+        .eq('id', ventaId)
+        .single();
+
+    if (errorVenta) throw errorVenta;
+
+    // Eliminamos la venta
     const { error } = await supabase
         .from('venta')
         .delete()
         .eq('id', ventaId);
 
     if (error) throw error;
+
+    // Verificamos si el cliente solo tenía esta venta (es cliente nuevo)
+    if (venta.cliente_id) {
+        const esClienteNuevo = await verificarClienteNuevo(venta.cliente_id);
+
+        // Si es cliente nuevo, lo eliminamos también
+        if (esClienteNuevo) {
+            const { error: errorCliente } = await supabase
+                .from('cliente')
+                .delete()
+                .eq('id', venta.cliente_id);
+
+            if (errorCliente) throw errorCliente;
+        }
+    }
+
     return true;
+}
+
+// Función para verificar si un cliente es nuevo (no tiene otras ventas)
+export async function verificarClienteNuevo(clienteId) {
+    const { count, error } = await supabase
+        .from('venta')
+        .select('id', { count: 'exact' })
+        .eq('cliente_id', clienteId);
+
+    if (error) throw error;
+
+    // Si no tiene ventas (count = 0), es un cliente nuevo
+    // Esta consulta se ejecuta DESPUÉS de eliminar la venta actual
+    return count === 0;
 }
 
 export async function getResumenDiario(user, carteraId) {
