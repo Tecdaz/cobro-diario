@@ -24,6 +24,7 @@ export default function Header() {
         { title: "Renovar Venta", href: "/renovar_venta" },
         { title: "Gestión Gastos", href: "/gestion_gastos" },
         { title: "Ventas otras fechas", href: "/ventas_otra_fecha" },
+        { title: "Historial de Pagos", href: "/pagos" },
     ]
 
     // Cerrar el menú cuando cambia la ruta
@@ -50,37 +51,43 @@ export default function Header() {
     };
 
     return (
-        <header>
+        <header className="w-full">
+            {/* Barra superior del header */}
             <div className="flex gap-4 p-4 h-10 bg-orange-400 justify-center fixed top-0 left-0 w-full items-center shadow-[0px_4px_8px_0px_rgba(0,0,0,0.2)] z-50">
-                <button className="absolute left-4" onClick={() => setIsOpen(!isOpen)}>
-                    {isOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
-                </button>
-                <div className="text-center font-semibold">{title}</div>
+                {/* Contenedor con ancho máximo */}
+                <div className="mx-auto w-full max-w-[768px] flex items-center justify-center relative">
+                    <button className="absolute left-0" onClick={() => setIsOpen(!isOpen)}>
+                        {isOpen ? <XMarkIcon className="h-6 w-6" /> : <Bars3Icon className="h-6 w-6" />}
+                    </button>
+                    <div className="text-center font-semibold">{title}</div>
 
-                {/* Botón de usuario en la esquina derecha */}
-                <button
-                    className="absolute right-4"
-                    onClick={isAuthenticated ? handleUserMenu : handleLogin}
-                >
-                    <UserCircleIcon className="h-6 w-6" />
-                </button>
+                    {/* Botón de usuario en la esquina derecha */}
+                    <button
+                        className="absolute right-0"
+                        onClick={isAuthenticated ? handleUserMenu : handleLogin}
+                    >
+                        <UserCircleIcon className="h-6 w-6" />
+                    </button>
+                </div>
             </div>
 
             {/* Menú de navegación */}
             <nav
-                className={`absolute top-10 left-0 w-full bg-orange-500 transition-all duration-300 shadow-lg z-40 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+                className={`fixed top-10 left-0 w-full bg-orange-500 transition-all duration-300 shadow-lg z-40 ${isOpen ? "opacity-100 visible" : "opacity-0 invisible"
                     }`}
             >
-                <ul className="p-4 space-y-2">
-                    {menuItems.map((item) => (
-                        <ItemMenu
-                            key={item.href}
-                            title={item.title}
-                            href={item.href}
-                            onClose={handleCloseMenu}
-                        />
-                    ))}
-                </ul>
+                <div className="mx-auto w-full max-w-[768px]">
+                    <ul className="p-4 space-y-2">
+                        {menuItems.map((item) => (
+                            <ItemMenu
+                                key={item.href}
+                                title={item.title}
+                                href={item.href}
+                                onClose={handleCloseMenu}
+                            />
+                        ))}
+                    </ul>
+                </div>
             </nav>
 
             {/* Menú de usuario */}
