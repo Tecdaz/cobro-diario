@@ -60,7 +60,7 @@ export default function Dashboard() {
         }
         fetchData();
 
-    }, [vrfActive, setCartera, user]);
+    }, [vrfActive, setCartera, user, cartera.id_cartera]);
 
 
     return (
