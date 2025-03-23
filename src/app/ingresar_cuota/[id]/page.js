@@ -159,6 +159,9 @@ export default function Page() {
                 await createNoPago(id);
             }
 
+            setIsLoading(false);
+            router.push(`/dashboard`);
+
         } catch (error) {
             console.error("Error al procesar el pago:", error);
             setIsLoading(false);
