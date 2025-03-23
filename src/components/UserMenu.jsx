@@ -9,9 +9,8 @@ export default function UserMenu({ user, handleSignOut, userMenuOpen, setUserMen
     const { cartera } = useAuth()
 
     useEffect(() => {
-        console.log(cartera)
         setUserMenuOpen(true)
-    }, [cartera])
+    }, [])
 
     return (
         <div

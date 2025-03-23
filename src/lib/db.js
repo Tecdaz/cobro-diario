@@ -498,3 +498,24 @@ export async function getCarterasByUser(userId) {
     if (error) throw error;
     return data;
 }
+
+export async function setDefaultCartera(userId, carteraId) {
+    // Primero, establece todas las carteras del usuario como no predeterminadas
+    const { error: resetError } = await supabase
+        .from('usuario_cartera')
+        .update({ default: false })
+        .eq('id_usuario', userId);
+
+    if (resetError) throw resetError;
+
+    // Luego, establece la cartera seleccionada como predeterminada
+    const { error: updateError } = await supabase
+        .from('usuario_cartera')
+        .update({ default: true })
+        .eq('id_usuario', userId)
+        .eq('id_cartera', carteraId);
+
+    if (updateError) throw updateError;
+
+    return { success: true };
+}
