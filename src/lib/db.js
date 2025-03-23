@@ -474,3 +474,27 @@ export async function getSaldos(ventaId) {
     if (error) throw error;
     return data;
 }
+
+export async function getCartera(userId) {
+    const { data, error } = await supabase
+        .from('usuario_cartera')
+        .select('id_cartera, cartera(nombre)')
+        .eq('id_usuario', userId)
+        .eq('default', true)
+        .limit(1)
+        .single();
+
+    if (error) throw error;
+    console.log(data)
+    return data;
+}
+
+export async function getCarterasByUser(userId) {
+    const { data, error } = await supabase
+        .from('usuario_cartera')
+        .select('cartera(*), default')
+        .eq('id_usuario', userId);
+
+    if (error) throw error;
+    return data;
+}

@@ -3,10 +3,12 @@ import CardCliente from "@/components/card_cliente/CardCliente";
 import SearchBar from "@/components/SearchBar";
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
-import { getTodayCobros, getTodayPayments } from "@/lib/db";
+import { getTodayCobros, getTodayPayments, getCart } from "@/lib/db";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Dashboard() {
     const { handleTitleChange } = useLayout();
+    const { setCartera, user, cartera } = useAuth();
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
@@ -33,8 +35,8 @@ export default function Dashboard() {
     }
 
     useEffect(() => {
-        handleTitleChange("Clientes")
-    }, [handleTitleChange]);
+        handleTitleChange(`Inicio ${cartera.cartera.nombre ? `- ${cartera.cartera.nombre}` : ""}`)
+    }, [handleTitleChange, cartera]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -57,8 +59,10 @@ export default function Dashboard() {
             }
         }
         fetchData();
-    }, [vrfActive]);
 
+    }, [vrfActive, setCartera, user]);
+
+    console.log(cartera)
     return (
         <div className="flex flex-col">
             <div className="h-16 p-4 flex items-center gap-4 justify-between w-full">

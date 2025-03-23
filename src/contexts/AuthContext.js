@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/db'
+import { getCartera, supabase } from '@/lib/db'
 
 // Crear el contexto de autenticación
 const AuthContext = createContext()
@@ -17,9 +17,19 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const router = useRouter()
+    const [cartera, setCartera] = useState({
+        id_cartera: null,
+        cartera: {
+            nombre: null
+        }
+    })
+
+
+
 
     // Comprobar si hay una sesión activa al cargar
     useEffect(() => {
+
         async function getSession() {
             setLoading(true)
             try {
@@ -27,8 +37,16 @@ export function AuthProvider({ children }) {
 
                 if (session) {
                     setUser(session.user)
+                    const carteraData = await getCartera(session.user.id)
+                    setCartera(carteraData)
                 } else {
                     setUser(null)
+                    setCartera({
+                        id_cartera: null,
+                        cartera: {
+                            nombre: null
+                        }
+                    })
                 }
             } catch (error) {
                 console.error('Error al obtener la sesión:', error)
@@ -40,11 +58,17 @@ export function AuthProvider({ children }) {
 
         getSession()
 
+
+
+
         // Configurar oyente para cambios en la autenticación
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
                     setUser(session.user)
+                    getCartera(session.user.id).then(carteraData => {
+                        setCartera(carteraData) // Establecer la cartera
+                    })
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null)
                 }
@@ -73,6 +97,8 @@ export function AuthProvider({ children }) {
         loading,
         signOut,
         isAuthenticated: !!user,
+        cartera,
+        setCartera
     }
 
     return (

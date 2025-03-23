@@ -6,12 +6,13 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import NavigationModal from '@/components/NavigationModal'
 import NavBar from '@/components/NavBar'
+import { getCartera } from '@/lib/db'
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/register']
 
 export default function RouteProtector({ children }) {
-    const { user, loading } = useAuth()
+    const { user, loading, setCartera } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [isPublicRoute, setIsPublicRoute] = useState(false)
