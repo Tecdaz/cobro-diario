@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { Bars3Icon, XMarkIcon, UserCircleIcon } from "@heroicons/react/24/solid"
 import ItemMenu from "@/components/menu_header/ItemMenu"
 import { usePathname, useRouter } from 'next/navigation'
+import UserMenu from "@/components/UserMenu"
 
 export default function Header() {
     const [isOpen, setIsOpen] = useState(false)
@@ -84,24 +85,7 @@ export default function Header() {
 
             {/* Menú de usuario */}
             {isAuthenticated && (
-                <div
-                    className={`absolute top-10 right-0 w-48 bg-white transition-all duration-300 shadow-lg z-40 rounded-bl-md ${userMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"
-                        }`}
-                >
-                    <div className="p-4 border-b">
-                        <p className="text-sm font-medium">{user?.email}</p>
-                    </div>
-                    <ul className="p-2">
-                        <li>
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 rounded"
-                            >
-                                Cerrar sesión
-                            </button>
-                        </li>
-                    </ul>
-                </div>
+                <UserMenu user={user} handleSignOut={handleSignOut} userMenuOpen={userMenuOpen} setUserMenuOpen={setUserMenuOpen} />
             )}
         </header>
     )
