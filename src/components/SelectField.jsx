@@ -7,6 +7,7 @@ export default function SelectField({ label, name, options, register, required, 
                 {...register(name, { required })}
                 value={value}
                 disabled={isDisabled}
+                onChange={handleOnChange}
             >
                 {options.map((option) => (
                     <option key={option.value} value={option.value}>
