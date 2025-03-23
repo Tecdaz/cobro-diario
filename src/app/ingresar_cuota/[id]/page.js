@@ -5,7 +5,7 @@ import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
-import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago, getSaldos } from "@/lib/db";
+import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago, getSaldos, updateVentaData } from "@/lib/db";
 import { useParams, useRouter } from "next/navigation";
 import SelectField from "@/components/SelectField";
 import Link from "next/link";
@@ -157,6 +157,13 @@ export default function Page() {
                     venta_id: id
                 })
                 await createNoPago(id);
+            }
+
+            // Verificar si el nuevo saldo es 0 para marcar la venta como inactiva
+            if (datosParseados.nuevoSaldo === 0) {
+                await updateVentaData(id, {
+                    activa: false
+                });
             }
 
             setIsLoading(false);
