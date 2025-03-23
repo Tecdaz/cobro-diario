@@ -12,13 +12,20 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function NuevaVenta() {
     const { handleTitleChange, setRequireConfirmation } = useLayout();
-    const { cartera, user } = useAuth()
+    const { cartera, user } = useAuth();
+
+    // Obtener el día de la semana actual (0 = domingo, 1 = lunes, ..., 6 = sábado)
+    const fechaActual = new Date();
+    const diaSemana = fechaActual.getDay();
+    // Convertir al formato 1-7 donde 1 es lunes y 7 es domingo
+    const diaSemanaAjustado = diaSemana === 0 ? "7" : String(diaSemana);
+
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
-            producto: "Credito"
+            producto: "Credito",
+            diaSemana: diaSemanaAjustado
         }
-    }
-    );
+    });
 
     const router = useRouter();
     const [valorVenta, setValorVenta] = useState(0);
@@ -26,6 +33,8 @@ export default function NuevaVenta() {
     const [numeroCuotas, setNumeroCuotas] = useState(0);
     const [valorInteres, setValorInteres] = useState(0);
     const [valorProducto, setValorProducto] = useState(0);
+    const [frecuenciaSeleccionada, setFrecuenciaSeleccionada] = useState("");
+    const [fechaMinima, setFechaMinima] = useState("");
 
     const handleValorVenta = (e) => {
         const { name, value } = e.target;
@@ -57,6 +66,11 @@ export default function NuevaVenta() {
         }
     }
 
+    const handleFrecuenciaChange = (e) => {
+        setFrecuenciaSeleccionada(e.target.value);
+        console.log(e.target.value);
+    }
+
     useEffect(() => {
         setRequireConfirmation(true);
         handleTitleChange("Nueva venta")
@@ -66,6 +80,30 @@ export default function NuevaVenta() {
         };
     }, [handleTitleChange, setRequireConfirmation]);
 
+    useEffect(() => {
+        const fechaActual = new Date();
+        const año = fechaActual.getFullYear();
+        const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+        const dia = String(fechaActual.getDate()).padStart(2, '0');
+        setFechaMinima(`${año}-${mes}-${dia}`);
+    }, []);
+
+    const validarFechaCobro = (value) => {
+        if (!value) return "Este campo es requerido";
+
+        const fechaSeleccionada = new Date(value);
+        const fechaActual = new Date();
+
+        // Reiniciamos las horas para comparar solo fechas
+        fechaSeleccionada.setHours(0, 0, 0, 0);
+        fechaActual.setHours(0, 0, 0, 0);
+
+        if (fechaSeleccionada <= fechaActual) {
+            return "La fecha debe ser posterior a la fecha actual";
+        }
+
+        return true;
+    };
 
     const onSubmit = async (data) => {
         try {
@@ -90,6 +128,8 @@ export default function NuevaVenta() {
                 cuotas: data.numeroCuotas,
                 valor_cuota: data.valorCuota,
                 frecuencia: data.frecuencia,
+                fecha_cobro: (data.frecuencia === "mensual" || data.frecuencia === "quincenal") ? data.fechaCobro : null,
+                dia_semana: data.frecuencia === "semanal" ? parseInt(data.diaSemana) : null,
                 activa: true,
                 cobrador: user.id,
                 id_cartera: cartera.id_cartera
@@ -138,8 +178,40 @@ export default function NuevaVenta() {
                     { value: "quincenal", label: "Quincenal" }, { value: "mensual", label: "Mensual" }]
                 }
                 required={true}
-                errors={errors} />
+                errors={errors}
+                handleOnChange={handleFrecuenciaChange} />
 
+            {(frecuenciaSeleccionada === "mensual" || frecuenciaSeleccionada === "quincenal") && (
+                <InputField
+                    label={`Fecha de cobro ${frecuenciaSeleccionada}`}
+                    register={register}
+                    name="fechaCobro"
+                    type="date"
+                    required={frecuenciaSeleccionada === "mensual" || frecuenciaSeleccionada === "quincenal"}
+                    errors={errors}
+                    min={fechaMinima}
+                    validate={validarFechaCobro}
+                />
+            )}
+
+            {frecuenciaSeleccionada === "semanal" && (
+                <SelectField
+                    label="Día de cobro semanal"
+                    register={register}
+                    name="diaSemana"
+                    options={[
+                        { value: "1", label: "Lunes" },
+                        { value: "2", label: "Martes" },
+                        { value: "3", label: "Miércoles" },
+                        { value: "4", label: "Jueves" },
+                        { value: "5", label: "Viernes" },
+                        { value: "6", label: "Sábado" },
+                        { value: "7", label: "Domingo" }
+                    ]}
+                    required={frecuenciaSeleccionada === "semanal"}
+                    errors={errors}
+                />
+            )}
 
             <div className="grid grid-cols-2 gap-2">
                 <div className="col-span-2">
