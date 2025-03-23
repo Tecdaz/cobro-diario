@@ -10,7 +10,7 @@ import SelectField from "@/components/SelectField";
 import { useRouter } from "next/navigation";
 
 export default function NuevaVenta() {
-    const { handleTitleChange } = useLayout();
+    const { handleTitleChange, setRequireConfirmation } = useLayout();
     const { register, handleSubmit, formState: { errors } } = useForm({
         defaultValues: {
             producto: "Credito"
@@ -56,8 +56,13 @@ export default function NuevaVenta() {
     }
 
     useEffect(() => {
+        setRequireConfirmation(true);
         handleTitleChange("Nueva venta")
-    }, [handleTitleChange]);
+
+        return () => {
+            setRequireConfirmation(false);
+        };
+    }, [handleTitleChange, setRequireConfirmation]);
 
 
     const onSubmit = async (data) => {
