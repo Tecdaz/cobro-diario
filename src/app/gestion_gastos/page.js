@@ -32,16 +32,19 @@ export default function GestionGastos() {
 
     const onSubmit = async (data) => {
         try {
-            data = {
-                ...data,
-                cobrador: user.id,
-                id_cartera: cartera.id_cartera
+            if (user && cartera.id_cartera) {
+                data = {
+                    ...data,
+                    cobrador: user.id,
+                    id_cartera: cartera.id_cartera
+                }
+                await createGasto(data);
+                router.push('/');
             }
-            await createGasto(data);
-            router.push('/');
         }
         catch (error) {
-
+            console.error("Error al crear gasto:", error);
+            toast.error("Error al crear gasto");
         }
     }
     return (

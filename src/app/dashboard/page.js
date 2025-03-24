@@ -58,7 +58,9 @@ export default function Dashboard() {
 
             }
         }
-        fetchData();
+        if (user && cartera.id_cartera) {
+            fetchData();
+        }
 
     }, [vrfActive, setCartera, user, cartera.id_cartera]);
 

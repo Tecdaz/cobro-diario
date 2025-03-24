@@ -27,8 +27,10 @@ export default function VentasNuevas() {
             }
         };
 
-        fetchVentas();
-    }, [handleTitleChange]);
+        if (user && cartera.id_cartera) {
+            fetchVentas();
+        }
+    }, [handleTitleChange, user, cartera.id_cartera]);
 
     if (isLoading) {
         return (

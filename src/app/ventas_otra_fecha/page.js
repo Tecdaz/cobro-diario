@@ -43,7 +43,9 @@ export default function VentasOtraFecha() {
 
             }
         }
-        fetchData();
+        if (user && cartera.id_cartera) {
+            fetchData();
+        }
     }, [user, cartera.id_cartera]);
 
     return (

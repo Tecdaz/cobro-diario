@@ -23,10 +23,10 @@ export default function Pagos() {
 
         const fetchVentas = async () => {
             try {
-                if (user && cartera) {
-                    const { data, error } = await supabase
-                        .from('venta')
-                        .select(`
+
+                const { data, error } = await supabase
+                    .from('venta')
+                    .select(`
                             id,
                             producto,
                             precio,
@@ -43,14 +43,14 @@ export default function Pagos() {
                                 documento
                             )
                         `)
-                        .eq('cobrador', user.id)
-                        .eq('id_cartera', cartera.id_cartera)
-                        .eq('activa', true)
-                        .order('created_at', { ascending: false });
+                    .eq('cobrador', user.id)
+                    .eq('id_cartera', cartera.id_cartera)
+                    .eq('activa', true)
+                    .order('created_at', { ascending: false });
 
-                    if (error) throw error;
-                    setVentas(data || []);
-                }
+                if (error) throw error;
+                setVentas(data || []);
+
                 setIsLoading(false);
             } catch (error) {
                 console.error("Error al obtener ventas:", error);
@@ -58,8 +58,10 @@ export default function Pagos() {
             }
         };
 
-        fetchVentas();
-    }, [handleTitleChange, user, cartera]);
+        if (user && cartera.id_cartera) {
+            fetchVentas();
+        }
+    }, [handleTitleChange, user, cartera.id_cartera]);
 
     const formatFecha = (fechaStr) => {
         if (!fechaStr) return "Fecha no disponible";

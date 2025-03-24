@@ -32,8 +32,10 @@ export default function page() {
                 setIsLoading(false);
             }
         }
-        fetchData();
-    }, [handleTitleChange]);
+        if (user && cartera.id_cartera) {
+            fetchData();
+        }
+    }, [handleTitleChange, user, cartera.id_cartera]);
 
     const handleSearch = (searchValue) => {
         setSearchTerm(searchValue);
