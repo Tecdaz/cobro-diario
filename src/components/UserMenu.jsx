@@ -28,7 +28,7 @@ export default function UserMenu({ user, handleSignOut, userMenuOpen, setUserMen
     if (!userMenuOpen) return null;
 
     return (
-        <div className="fixed top-10 right-0 w-full z-40">
+        <div className="fixed top-14 right-0 w-full z-40">
             <div className="mx-auto w-full max-w-[768px] flex justify-end">
                 <div
                     ref={menuRef}
