@@ -77,6 +77,7 @@ export default function NuevaVenta() {
         } else {
             const numero = parseInt(valorNumerico, 10);
             setValorProducto(numero);
+            // Guardar el valor numérico en el formulario, no el formateado
             setValue('valorProducto', numero);
             setValorProductoFormateado(formatMoneda(numero));
 
@@ -99,6 +100,7 @@ export default function NuevaVenta() {
         } else {
             const numero = parseInt(valorNumerico, 10);
             setValorCuota(numero);
+            // Guardar el valor numérico en el formulario, no el formateado
             setValue('valorCuota', numero);
             setValorCuotaFormateado(formatMoneda(numero));
 
@@ -115,11 +117,14 @@ export default function NuevaVenta() {
 
     // Manejador para el campo de número de cuotas
     const handleNumeroCuotasChange = useCallback((e) => {
-        const numCuotas = e.target.value ? parseInt(e.target.value) : 0;
+        // Convertir a número de forma segura
+        const valor = e.target.value || '';
+        const numCuotas = parseInt(valor.replace(/[^\d]/g, ''), 10) || 0;
+
         setNumeroCuotas(numCuotas);
         setValue('numeroCuotas', numCuotas);
 
-        // Calcular nuevo valor de venta
+        // Calcular nuevo valor de venta (asegurarse que ambos son números)
         const nuevoValorVenta = numCuotas * valorCuota;
         setValorVenta(nuevoValorVenta);
 
@@ -173,46 +178,60 @@ export default function NuevaVenta() {
         setMensaje("Registrando venta...");
 
         try {
+            // Función para limpiar valores monetarios (eliminar símbolos de moneda, puntos, etc.)
+            const limpiarValorMonetario = (valor) => {
+                if (typeof valor === 'number') return valor;
+                if (!valor) return 0;
+                // Eliminar todo lo que no sea dígito
+                return parseInt(valor.toString().replace(/[^\d]/g, ''), 10) || 0;
+            };
+
             // Preparar los datos asegurándose que los valores numéricos sean números
             const dataParsed = {
                 ...data,
-                valorProducto: parseInt(data.valorProducto || 0),
-                valorCuota: parseInt(data.valorCuota || 0),
-                numeroCuotas: parseInt(data.numeroCuotas || 0)
+                valorProducto: limpiarValorMonetario(data.valorProducto),
+                valorCuota: limpiarValorMonetario(data.valorCuota),
+                numeroCuotas: parseInt(data.numeroCuotas || 0, 10)
             };
 
-            // Registrar el cliente
-            setMensaje("Registrando datos del cliente...");
-            const clienteData = await createClientData({
-                documento: dataParsed.documento,
-                nombre: dataParsed.nombre,
-                telefono: dataParsed.telefono,
-                direccion: dataParsed.direccion,
-                id_cartera: cartera.id_cartera,
-                cobrador: user.id
-            });
+            if (user && cartera.id_cartera) {
+                setMensaje("Registrando datos del cliente...");
+                const clienteData = await createClientData({
+                    documento: dataParsed.documento,
+                    nombre: dataParsed.nombre,
+                    telefono: dataParsed.telefono,
+                    direccion: dataParsed.direccion,
+                    id_cartera: cartera.id_cartera,
+                    cobrador: user.id
+                });
 
-            const idCliente = clienteData[0].id;
+                const idCliente = clienteData[0].id;
 
-            // Registrar la venta
-            setMensaje("Registrando datos de la venta...");
-            const ventaData = {
-                cliente_id: idCliente,
-                producto: dataParsed.producto,
-                precio: dataParsed.valorProducto,
-                cuotas: dataParsed.numeroCuotas,
-                valor_cuota: dataParsed.valorCuota,
-                frecuencia: dataParsed.frecuencia,
-                fecha_cobro: (dataParsed.frecuencia === "mensual" || dataParsed.frecuencia === "quincenal") ? dataParsed.fechaCobro : null,
-                dia_semana: dataParsed.frecuencia === "semanal" ? parseInt(dataParsed.diaSemana) : null,
-                activa: true,
-                cobrador: user.id,
-                id_cartera: cartera.id_cartera
+                // Registrar la venta
+                setMensaje("Registrando datos de la venta...");
+                const ventaData = {
+                    cliente_id: idCliente,
+                    producto: dataParsed.producto,
+                    precio: dataParsed.valorProducto,
+                    cuotas: dataParsed.numeroCuotas,
+                    valor_cuota: dataParsed.valorCuota,
+                    frecuencia: dataParsed.frecuencia,
+                    fecha_cobro: (dataParsed.frecuencia === "mensual" || dataParsed.frecuencia === "quincenal") ? dataParsed.fechaCobro : null,
+                    dia_semana: dataParsed.frecuencia === "semanal" ? parseInt(dataParsed.diaSemana) : null,
+                    activa: true,
+                    cobrador: user.id,
+                    id_cartera: cartera.id_cartera
+                }
+
+                await createVentaData(ventaData);
+
+                setMensaje("¡Venta registrada correctamente! Redirigiendo...");
+            } else {
+                throw new Error("No se pudo registrar la venta. Por favor, verifique los datos e intente nuevamente.");
             }
 
-            await createVentaData(ventaData);
 
-            setMensaje("¡Venta registrada correctamente! Redirigiendo...");
+
 
             // Esperar un segundo antes de redireccionar para que el usuario vea el mensaje de éxito
             setTimeout(() => {
