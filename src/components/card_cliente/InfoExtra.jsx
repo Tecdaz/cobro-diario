@@ -11,6 +11,16 @@ export default function InfoExtra(props) {
         router.push(`/pagos/${data.id}`)
     }
 
+    // Manejador para llamadas telefónicas y mapas
+    const handleClick = (e, title, value) => {
+        // Este manejador puede usarse para realizar acciones adicionales
+        if (title === "Dirección") {
+            console.log(`Abriendo mapa para la dirección: ${value}`)
+        } else {
+            console.log(`Llamando al número: ${value}`)
+        }
+    }
+
     // Función para formatear moneda
     const formatMoneda = (valor) => {
         return new Intl.NumberFormat('es-AR', {
@@ -56,8 +66,16 @@ export default function InfoExtra(props) {
                 <Button className="flex-1 border-black" variant="outline">Fotos</Button>
             </div>
             <div className="flex flex-col gap-2">
-                <InfoCardCliente title="Teléfono" value={data.telefono} />
-                <InfoCardCliente title="Dirección" value={data.direccion} />
+                <InfoCardCliente
+                    title="Teléfono"
+                    value={data.telefono}
+                    onClick={handleClick}
+                />
+                <InfoCardCliente
+                    title="Dirección"
+                    value={data.direccion}
+                    onClick={handleClick}
+                />
                 <InfoCardCliente title="Documento" value={data.documento} />
                 <InfoCardCliente title="Valor" value={formatMoneda(data.cuotas * data.valor_cuota)} />
                 <InfoCardCliente title="Cuotas" value={data.cuotas} />
