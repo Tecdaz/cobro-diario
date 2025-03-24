@@ -16,6 +16,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [carteraLoading, setCarteraLoading] = useState(false)
     const router = useRouter()
     const [cartera, setCartera] = useState({
         id_cartera: null,
@@ -24,82 +25,96 @@ export function AuthProvider({ children }) {
         }
     })
 
-    // Comprobar si hay una sesión activa al cargar y configurar renovación automática de tokens
+    // Efecto para cargar la cartera cuando cambia el usuario
     useEffect(() => {
-        async function getSession() {
-            setLoading(true)
+        async function loadCartera() {
+            if (!user) return;
+
+            setCarteraLoading(true);
             try {
-                // Habilitar la renovación automática de tokens
-                await supabase.auth.setSession({
-                    refresh_token_threshold: 60, // Renovar cuando falten 60 segundos para expirar
-                    autoRefreshToken: true
-                });
-
-                const { data: { session }, error } = await supabase.auth.getSession()
-
-                if (session) {
-                    setUser(session.user)
-                    const carteraData = await getCartera(session.user.id)
-                    setCartera(carteraData)
-                } else {
-                    setUser(null)
-                    setCartera({
-                        id_cartera: null,
-                        cartera: {
-                            nombre: null
-                        }
-                    })
-                }
+                console.log('[AuthContext] Obteniendo datos de cartera para usuario:', user.id);
+                const carteraData = await getCartera(user.id);
+                console.log('[AuthContext] Datos de cartera obtenidos:', carteraData);
+                setCartera(carteraData);
             } catch (error) {
-                console.error('Error al obtener la sesión:', error)
-                setUser(null)
+                console.error('[AuthContext] Error al obtener cartera:', error);
+                setCartera({
+                    id_cartera: null,
+                    cartera: { nombre: 'Error al obtener cartera' }
+                });
             } finally {
-                setLoading(false)
+                setCarteraLoading(false);
             }
         }
 
-        getSession()
+        if (user) {
+            loadCartera();
+        }
+    }, [user]);
+
+    // Comprobar si hay una sesión activa al cargar
+    useEffect(() => {
+        async function getSession() {
+            setLoading(true);
+            try {
+                console.log('[AuthContext] Iniciando obtención de sesión');
+
+                // Simplemente obtener la sesión
+                const { data: { session }, error } = await supabase.auth.getSession();
+                console.log('[AuthContext] Resultado getSession:', session ? 'Sesión encontrada' : 'Sin sesión', error ? `Error: ${error.message}` : 'Sin errores');
+
+                if (session) {
+                    setUser(session.user);
+                } else {
+                    console.log('[AuthContext] No hay sesión activa');
+                    setUser(null);
+                    setCartera({
+                        id_cartera: null,
+                        cartera: { nombre: null }
+                    });
+                }
+            } catch (error) {
+                console.error('[AuthContext] Error crítico al obtener la sesión:', error);
+                setUser(null);
+            } finally {
+                setLoading(false);
+                console.log('[AuthContext] Estado de carga finalizado');
+            }
+        }
+
+        getSession();
 
         // Configurar oyente para cambios en la autenticación
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
+            (event, session) => {
+                console.log('[AuthContext] Evento de autenticación:', event, session ? 'Con sesión' : 'Sin sesión');
+
                 if (event === 'SIGNED_IN' && session) {
-                    setUser(session.user)
-                    // Establecer la cartera después de iniciar sesión
-                    try {
-                        const carteraData = await getCartera(session.user.id)
-                        setCartera(carteraData)
-                    } catch (error) {
-                        console.error('Error al obtener la cartera:', error)
-                    }
+                    setUser(session.user);
                 } else if (event === 'SIGNED_OUT') {
-                    setUser(null)
+                    console.log('[AuthContext] Usuario ha cerrado sesión');
+                    setUser(null);
                     setCartera({
                         id_cartera: null,
-                        cartera: {
-                            nombre: null
-                        }
-                    })
-                } else if (event === 'TOKEN_REFRESHED') {
-                    // Actualizar usuario cuando se renueve el token
-                    setUser(session.user)
+                        cartera: { nombre: null }
+                    });
                 }
             }
-        )
+        );
 
         // Limpiar la suscripción
         return () => {
-            subscription?.unsubscribe()
+            subscription?.unsubscribe();
         }
-    }, [])
+    }, []);
 
     // Función para cerrar sesión
     async function signOut() {
         try {
-            await supabase.auth.signOut()
-            router.push('/login')
+            await supabase.auth.signOut();
+            router.push('/login');
         } catch (error) {
-            console.error('Error al cerrar sesión:', error)
+            console.error('Error al cerrar sesión:', error);
         }
     }
 
@@ -107,6 +122,7 @@ export function AuthProvider({ children }) {
     const value = {
         user,
         loading,
+        carteraLoading,
         signOut,
         isAuthenticated: !!user,
         cartera,
@@ -118,4 +134,4 @@ export function AuthProvider({ children }) {
             {children}
         </AuthContext.Provider>
     )
-} 
+}

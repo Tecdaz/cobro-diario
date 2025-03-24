@@ -6,69 +6,47 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import NavigationModal from '@/components/NavigationModal'
 import NavBar from '@/components/NavBar'
-import { getCartera, supabase } from '@/lib/db'
+import { supabase } from '@/lib/db'
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/register']
 
 export default function RouteProtector({ children }) {
-    const { user, loading, setCartera } = useAuth()
+    const { user, loading } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [isPublicRoute, setIsPublicRoute] = useState(false)
+
 
     useEffect(() => {
         // Verificar si la ruta actual es pública
         const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
         setIsPublicRoute(isPublic)
-
-        // Función para manejar errores de autenticación
-        const handleAuthError = async () => {
-            try {
-                // Intentar limpiar la sesión completamente
-                await supabase.auth.signOut();
-                console.log('Sesión cerrada debido a problemas de autenticación');
-                router.push('/login');
-            } catch (error) {
-                console.error('Error al cerrar sesión:', error);
-                router.push('/login');
-            }
-        };
+        console.log('[RouteProtector] Ruta actual:', pathname, 'Es pública:', isPublic, 'Usuario:', user ? 'Autenticado' : 'No autenticado', 'Cargando:', loading);
 
         // Si no está cargando, verificar autenticación
         if (!loading) {
+            console.log('[RouteProtector] Verificando autenticación para', pathname);
             if (!user && !isPublic) {
                 // No está autenticado y no es una ruta pública, redirigir a login
+                console.log('[RouteProtector] Redirigiendo a login - Usuario no autenticado en ruta protegida');
                 router.push('/login')
             } else if (user && isPublic) {
                 // Está autenticado pero está en una ruta pública (login/register), redirigir a dashboard
+                console.log('[RouteProtector] Redirigiendo a dashboard - Usuario autenticado en ruta pública');
                 router.push('/dashboard')
-            } else if (user && !isPublic) {
-                // Usuario autenticado en ruta protegida - verificar si la sesión es válida
-                (async () => {
-                    try {
-                        // Verificar la cartera para confirmar que la sesión es válida
-                        const carteraData = await getCartera(user.id);
-                        setCartera(carteraData);
-                    } catch (error) {
-                        console.error('Error al verificar sesión:', error);
-                        // Si hay error (probablemente token inválido), cerrar sesión
-                        if (error.message?.includes('Invalid refresh token') ||
-                            error.message?.includes('JWT') ||
-                            error.status === 401) {
-                            await handleAuthError();
-                        }
-                    }
-                })();
             }
         }
-    }, [user, loading, pathname, router, setCartera]);
+    }, [user, loading, pathname, router]);
 
     // Mostrar indicador de carga mientras se verifica la autenticación
     if (loading) {
+        console.log('[RouteProtector] Mostrando indicador de carga, estado actual - user:', user ? 'Existe' : 'No existe',
+            'pathname:', pathname, 'isPublicRoute:', isPublicRoute);
         return (
-            <div className="flex justify-center items-center min-h-screen">
+            <div className="flex flex-col justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <p className="mt-4 text-gray-600">Cargando... por favor espere</p>
             </div>
         )
     }
@@ -84,7 +62,7 @@ export default function RouteProtector({ children }) {
                 <>
                     <Header />
                     <NavigationModal />
-                    <main className="overflow-auto mt-10 mb-16 flex-1">{children}</main>
+                    <main className="overflow-auto mt-14 mb-16 flex-1">{children}</main>
                     <NavBar />
                 </>
             )

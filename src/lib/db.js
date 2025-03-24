@@ -7,7 +7,14 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 // Create a single supabase client for interacting with your database
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
+// Función para depurar peticiones a Supabase
+function logSupabaseRequest(action, request, result) {
+    console.log(`[Supabase ${action}]`, 'Request:', request, 'Result:', result);
+}
+
 export async function getTodayCobros(user, carteraId) {
+    console.log('Solicitando cobros del día para usuario:', user.id, 'cartera:', carteraId);
+    const request = { cobrador: user.id, id_cartera: carteraId };
     const { data, error } = await supabase
         .from('ventas_para_cobrar')
         .select('*')
@@ -15,6 +22,7 @@ export async function getTodayCobros(user, carteraId) {
         .eq('id_cartera', carteraId)
         .order('nombre')
 
+    logSupabaseRequest('getTodayCobros', request, { data, error });
     if (error) throw error
     return data
 }
@@ -530,6 +538,7 @@ export async function getSaldos(ventaId) {
 }
 
 export async function getCartera(userId) {
+    console.log('[DB] Solicitando cartera para usuario:', userId);
     const { data, error } = await supabase
         .from('usuario_cartera')
         .select('id_cartera, cartera(nombre)')
@@ -538,9 +547,34 @@ export async function getCartera(userId) {
         .limit(1)
         .single();
 
-    if (error) throw error;
+    console.log('[DB] Respuesta de Supabase recibida');
 
+    if (error) {
+        // Solo loguear el error, pero devolver un objeto vacío en lugar de lanzar excepción
+        console.error('[DB] Error en getCartera:', error.message, 'Código:', error.code);
+
+        // Si es un problema de datos no encontrados, retornar un objeto por defecto
+        if (error.code === 'PGRST116') {
+            console.log('[DB] No se encontró una cartera predeterminada para el usuario');
+            return {
+                id_cartera: null,
+                cartera: {
+                    nombre: 'Sin cartera predeterminada'
+                }
+            };
+        }
+
+        return {
+            id_cartera: null,
+            cartera: {
+                nombre: 'Error de cartera'
+            }
+        };
+    }
+
+    console.log('[DB] Resultado getCartera exitoso:', data);
     return data;
+
 }
 
 export async function getCarterasByUser(userId) {
