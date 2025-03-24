@@ -9,6 +9,7 @@ import { Watch } from "lucide-react";
 import SelectField from "@/components/SelectField";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function NuevaVenta() {
     const { handleTitleChange, setRequireConfirmation } = useLayout();
@@ -35,6 +36,9 @@ export default function NuevaVenta() {
     const [valorProducto, setValorProducto] = useState(0);
     const [frecuenciaSeleccionada, setFrecuenciaSeleccionada] = useState("");
     const [fechaMinima, setFechaMinima] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(null);
+    const [mensaje, setMensaje] = useState(null);
 
     const handleValorVenta = (e) => {
         const { name, value } = e.target;
@@ -106,9 +110,13 @@ export default function NuevaVenta() {
     };
 
     const onSubmit = async (data) => {
+        setIsSubmitting(true);
+        setError(null);
+        setMensaje("Registrando venta...");
+
         try {
-
-
+            // Registrar el cliente
+            setMensaje("Registrando datos del cliente...");
             const clienteData = await createClientData({
                 documento: data.documento,
                 nombre: data.nombre,
@@ -118,9 +126,10 @@ export default function NuevaVenta() {
                 cobrador: user.id
             });
 
-
             const idCliente = clienteData[0].id;
 
+            // Registrar la venta
+            setMensaje("Registrando datos de la venta...");
             const ventaData = {
                 cliente_id: idCliente,
                 producto: data.producto,
@@ -137,17 +146,37 @@ export default function NuevaVenta() {
 
             await createVentaData(ventaData);
 
-            // Redireccionar al inicio
-            router.push("/");
+            setMensaje("¡Venta registrada correctamente! Redirigiendo...");
+
+            // Esperar un segundo antes de redireccionar para que el usuario vea el mensaje de éxito
+            setTimeout(() => {
+                // Redireccionar al inicio
+                router.push("/");
+            }, 1000);
         }
         catch (error) {
             console.error("Error al enviar datos", error);
+            setError("Error al registrar la venta: " + (error.message || "Por favor intente nuevamente"));
+            setMensaje(null);
+            setIsSubmitting(false);
         }
     }
 
     return (
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col p-4 gap-2">
+            {error && (
+                <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
+            {mensaje && !error && (
+                <Alert className="mb-4">
+                    <AlertDescription>{mensaje}</AlertDescription>
+                </Alert>
+            )}
+
             <h2 className="font-semibold text-l">Datos cliente</h2>
             <InputField label="Nombre" register={register} name="nombre" required={true} errors={errors} />
 
@@ -231,7 +260,13 @@ export default function NuevaVenta() {
                 </div>
             </div>
 
-            <button className="bg-blue-500 text-white p-2 rounded-md mt-2" onClick={handleSubmit(onSubmit)}>Registrar venta</button>
+            <button
+                type="submit"
+                className="bg-blue-500 text-white p-2 rounded-md mt-2 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+            >
+                {isSubmitting ? 'Procesando...' : 'Registrar venta'}
+            </button>
 
 
         </form>
