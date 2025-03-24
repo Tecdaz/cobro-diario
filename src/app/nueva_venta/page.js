@@ -1,7 +1,7 @@
 "use client"
 
 import InputField from "@/components/InputField";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { set, useForm } from "react-hook-form";
 import { useLayout } from "@/contexts/LayoutContext";
 import { createClientData, createVentaData } from "@/lib/db";
@@ -21,10 +21,13 @@ export default function NuevaVenta() {
     // Convertir al formato 1-7 donde 1 es lunes y 7 es domingo
     const diaSemanaAjustado = diaSemana === 0 ? "7" : String(diaSemana);
 
-    const { register, handleSubmit, formState: { errors } } = useForm({
+    const { register, handleSubmit, setValue, formState: { errors } } = useForm({
         defaultValues: {
             producto: "Credito",
-            diaSemana: diaSemanaAjustado
+            diaSemana: diaSemanaAjustado,
+            valorProducto: 0,
+            valorCuota: 0,
+            numeroCuotas: 0
         }
     });
 
@@ -40,39 +43,94 @@ export default function NuevaVenta() {
     const [error, setError] = useState(null);
     const [mensaje, setMensaje] = useState(null);
 
-    const handleValorVenta = (e) => {
-        const { name, value } = e.target;
-        const numericValue = value === "" ? 0 : Number(value);
+    // Estados para valores formateados
+    const [valorProductoFormateado, setValorProductoFormateado] = useState('');
+    const [valorCuotaFormateado, setValorCuotaFormateado] = useState('');
+    const [valorVentaFormateado, setValorVentaFormateado] = useState('');
 
+    // Función para formatear moneda (memoizada)
+    const formatMoneda = useCallback((valor) => {
+        if (valor === undefined || valor === null) return '';
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0
+        }).format(valor);
+    }, []);
 
+    // Actualiza los formatos de moneda cuando cambian los valores
+    useEffect(() => {
+        setValorVentaFormateado(formatMoneda(valorVenta));
+        setValorProductoFormateado(formatMoneda(valorProducto));
+        setValorCuotaFormateado(formatMoneda(valorCuota));
+    }, [valorVenta, valorProducto, valorCuota, formatMoneda]);
 
+    // Manejador para el campo de valor producto
+    const handleValorProductoChange = useCallback((e) => {
+        const valorInput = e.target.value || '';
+        const valorNumerico = valorInput.toString().replace(/[^\d]/g, '');
 
-        if (name === 'numeroCuotas') {
-            setNumeroCuotas(numericValue);
-            const nuevoValorVenta = numericValue * valorCuota;
+        if (valorNumerico === '') {
+            setValorProducto(0);
+            setValorProductoFormateado('');
+            setValue('valorProducto', 0);
+        } else {
+            const numero = parseInt(valorNumerico, 10);
+            setValorProducto(numero);
+            setValue('valorProducto', numero);
+            setValorProductoFormateado(formatMoneda(numero));
+
+            // Calcula el interés si hay un valor de venta
+            if (valorVenta > 0 && numero > 0) {
+                setValorInteres(((valorVenta / numero) - 1) * 100);
+            }
+        }
+    }, [setValue, valorVenta, formatMoneda]);
+
+    // Manejador para el campo de valor cuota
+    const handleValorCuotaChange = useCallback((e) => {
+        const valorInput = e.target.value || '';
+        const valorNumerico = valorInput.toString().replace(/[^\d]/g, '');
+
+        if (valorNumerico === '') {
+            setValorCuota(0);
+            setValorCuotaFormateado('');
+            setValue('valorCuota', 0);
+        } else {
+            const numero = parseInt(valorNumerico, 10);
+            setValorCuota(numero);
+            setValue('valorCuota', numero);
+            setValorCuotaFormateado(formatMoneda(numero));
+
+            // Calcular nuevo valor de venta
+            const nuevoValorVenta = numero * numeroCuotas;
             setValorVenta(nuevoValorVenta);
+
+            // Calcular nuevo interés
             if (valorProducto > 0) {
                 setValorInteres(((nuevoValorVenta / valorProducto) - 1) * 100);
             }
         }
-        if (name === 'valorCuota') {
-            setValorCuota(numericValue);
-            const nuevoValorVenta = numericValue * numeroCuotas;
-            setValorVenta(nuevoValorVenta);
-            if (valorProducto > 0) {
-                setValorInteres(((nuevoValorVenta / valorProducto) - 1) * 100);
-            }
+    }, [setValue, numeroCuotas, valorProducto, formatMoneda]);
 
+    // Manejador para el campo de número de cuotas
+    const handleNumeroCuotasChange = useCallback((e) => {
+        const numCuotas = e.target.value ? parseInt(e.target.value) : 0;
+        setNumeroCuotas(numCuotas);
+        setValue('numeroCuotas', numCuotas);
+
+        // Calcular nuevo valor de venta
+        const nuevoValorVenta = numCuotas * valorCuota;
+        setValorVenta(nuevoValorVenta);
+
+        // Calcular nuevo interés
+        if (valorProducto > 0) {
+            setValorInteres(((nuevoValorVenta / valorProducto) - 1) * 100);
         }
-        if (name === 'valorProducto' && numericValue > 0) {
-            setValorProducto(numericValue);
-            setValorInteres(((valorVenta / numericValue) - 1) * 100);
-        }
-    }
+    }, [setValue, valorCuota, valorProducto]);
 
     const handleFrecuenciaChange = (e) => {
         setFrecuenciaSeleccionada(e.target.value);
-        console.log(e.target.value);
     }
 
     useEffect(() => {
@@ -115,13 +173,21 @@ export default function NuevaVenta() {
         setMensaje("Registrando venta...");
 
         try {
+            // Preparar los datos asegurándose que los valores numéricos sean números
+            const dataParsed = {
+                ...data,
+                valorProducto: parseInt(data.valorProducto || 0),
+                valorCuota: parseInt(data.valorCuota || 0),
+                numeroCuotas: parseInt(data.numeroCuotas || 0)
+            };
+
             // Registrar el cliente
             setMensaje("Registrando datos del cliente...");
             const clienteData = await createClientData({
-                documento: data.documento,
-                nombre: data.nombre,
-                telefono: data.telefono,
-                direccion: data.direccion,
+                documento: dataParsed.documento,
+                nombre: dataParsed.nombre,
+                telefono: dataParsed.telefono,
+                direccion: dataParsed.direccion,
                 id_cartera: cartera.id_cartera,
                 cobrador: user.id
             });
@@ -132,13 +198,13 @@ export default function NuevaVenta() {
             setMensaje("Registrando datos de la venta...");
             const ventaData = {
                 cliente_id: idCliente,
-                producto: data.producto,
-                precio: data.valorProducto,
-                cuotas: data.numeroCuotas,
-                valor_cuota: data.valorCuota,
-                frecuencia: data.frecuencia,
-                fecha_cobro: (data.frecuencia === "mensual" || data.frecuencia === "quincenal") ? data.fechaCobro : null,
-                dia_semana: data.frecuencia === "semanal" ? parseInt(data.diaSemana) : null,
+                producto: dataParsed.producto,
+                precio: dataParsed.valorProducto,
+                cuotas: dataParsed.numeroCuotas,
+                valor_cuota: dataParsed.valorCuota,
+                frecuencia: dataParsed.frecuencia,
+                fecha_cobro: (dataParsed.frecuencia === "mensual" || dataParsed.frecuencia === "quincenal") ? dataParsed.fechaCobro : null,
+                dia_semana: dataParsed.frecuencia === "semanal" ? parseInt(dataParsed.diaSemana) : null,
                 activa: true,
                 cobrador: user.id,
                 id_cartera: cartera.id_cartera
@@ -184,15 +250,8 @@ export default function NuevaVenta() {
 
             <div className="flex gap-2 justify-between">
                 <InputField label="Documento" register={register} name="documento" required={true} errors={errors} className="flex-1" />
-
-
-
                 <InputField label="Telefono" register={register} name="telefono" required={true} errors={errors} className="flex-1" />
             </div>
-
-
-
-
 
             <h2 className="font-semibold text-l mt-2">Datos venta</h2>
 
@@ -244,19 +303,46 @@ export default function NuevaVenta() {
 
             <div className="grid grid-cols-2 gap-2">
                 <div className="col-span-2">
-                    <InputField label="Valor producto" register={register} name="valorProducto" required={true} errors={errors} type='number' handleOnChange={handleValorVenta} />
+                    <InputField
+                        label="Valor producto"
+                        register={register}
+                        name="valorProducto"
+                        required={true}
+                        errors={errors}
+                        value={valorProductoFormateado}
+                        handleOnChange={handleValorProductoChange}
+                    />
                 </div>
 
+                <InputField
+                    label="Número de cuotas"
+                    register={register}
+                    name="numeroCuotas"
+                    required={true}
+                    errors={errors}
+                    type='number'
+                    handleOnChange={handleNumeroCuotasChange}
+                />
 
-                <InputField label="Número de cuotas" register={register} name="numeroCuotas" required={true} errors={errors} handleOnChange={handleValorVenta} type='number' />
-
-                <InputField label="Valor cuota" register={register} name="valorCuota" required={true} errors={errors} handleOnChange={handleValorVenta} type='number' />
+                <InputField
+                    label="Valor cuota"
+                    register={register}
+                    name="valorCuota"
+                    required={true}
+                    errors={errors}
+                    value={valorCuotaFormateado}
+                    handleOnChange={handleValorCuotaChange}
+                />
 
                 <div className="col-span-2">
-                    <p className={`${valorVenta < valorProducto ? "text-red-500" : ""}`}><span className="text-black">Valor venta:</span> {valorVenta}</p>
+                    <p className={`${valorVenta < valorProducto ? "text-red-500" : ""}`}>
+                        <span className="text-black">Valor venta:</span> {valorVentaFormateado}
+                    </p>
                 </div>
                 <div className="col-span-2">
-                    <p className={`${valorInteres < 0 ? "text-red-500" : ""}`}><span className="text-black">Interes:</span> {Math.round(valorInteres)} %</p>
+                    <p className={`${valorInteres < 0 ? "text-red-500" : ""}`}>
+                        <span className="text-black">Interes:</span> {Math.round(valorInteres)} %
+                    </p>
                 </div>
             </div>
 
@@ -267,10 +353,7 @@ export default function NuevaVenta() {
             >
                 {isSubmitting ? 'Procesando...' : 'Registrar venta'}
             </button>
-
-
         </form>
-
     );
 };
 

@@ -3,7 +3,7 @@ import InputField from "@/components/InputField";
 import InputRadio from "@/components/InputRadio";
 import { Watch } from "lucide-react";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useLayout } from "@/contexts/LayoutContext";
 import { getDataCuotas, createAbono, createCuota, createSiguienteDia, createNoPago, getSaldos, updateVentaData } from "@/lib/db";
 import { useParams, useRouter } from "next/navigation";
@@ -31,15 +31,23 @@ export default function Page() {
     const [nuevoSaldo, setNuevoSaldo] = useState(0);
     const [saldoActual, setSaldoActual] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
+    const [valorAbonoFormateado, setValorAbonoFormateado] = useState('');
+    const [totalVentaFormateado, setTotalVentaFormateado] = useState('');
+    const [saldoActualFormateado, setSaldoActualFormateado] = useState('');
+    const [nuevoSaldoFormateado, setNuevoSaldoFormateado] = useState('');
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
         defaultValues: {
             pago: "cuota",
             cuotas: '',
-            abono: '',
+            abono: 0,
+            totalVenta: 0,
+            saldoActual: 0,
+            nuevoSaldo: 0,
+            producto: "Credito",
+            metodoPago: "efectivo"
         }
-    }
-    );
+    });
 
     const validateNuevoSaldo = (value) => {
         if (value < 0) {
@@ -53,78 +61,159 @@ export default function Page() {
     const params = useParams();
     const { id } = params;
     // 
+    // Función para formatear moneda (memoizada)
+    const formatMoneda = useCallback((valor) => {
+        if (valor === undefined || valor === null) return '';
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0
+        }).format(valor);
+    }, []);
     useEffect(() => {
         handleTitleChange("Ingresar cuota")
         setRequireConfirmation(true); // Activar la confirmación al navegar
-        // 
+
         if (id) {
             const fetchData = async () => {
                 try {
-
                     const dataFetched = await getDataCuotas(id);
                     const saldo = await getSaldos(id);
 
-                    setData(dataFetched);
-                    setSaldoActual(saldo[0]['saldo']);
-                    setValue("totalVenta", dataFetched[0]['cuotas'] * dataFetched[0]['valor_cuota']);
-                    setValue("saldoActual", saldo[0]['saldo']);
+                    if (dataFetched && dataFetched.length > 0 && saldo && saldo.length > 0) {
+                        const saldoValue = saldo[0]['saldo'];
+                        const totalVenta = dataFetched[0]['cuotas'] * dataFetched[0]['valor_cuota'];
+
+                        // Actualizamos los estados en batch para evitar múltiples renderizados
+                        setData(dataFetched);
+                        setSaldoActual(saldoValue);
+                        setNuevoSaldo(saldoValue);
+
+                        // Actualizamos los valores del formulario
+                        setValue("totalVenta", totalVenta);
+                        setValue("saldoActual", saldoValue);
+                        setValue("nuevoSaldo", saldoValue);
+
+                        // Reiniciamos los valores de entrada
+                        setValue("cuotas", '');
+                        setValue("abono", 0);
+                        setValorAbonoFormateado('');
+
+                        // Actualizamos los formatos
+                        setTotalVentaFormateado(formatMoneda(totalVenta));
+                        setSaldoActualFormateado(formatMoneda(saldoValue));
+                        setNuevoSaldoFormateado(formatMoneda(saldoValue));
+                    }
                 }
                 catch (error) {
-
+                    console.error("Error al cargar datos:", error);
                 }
             }
+
             fetchData();
         }
 
         return () => {
             setRequireConfirmation(false); // Desactivar al desmontar el componente
         };
-    }, [id, handleTitleChange, setValue, setRequireConfirmation]);
+    }, [id, handleTitleChange, setValue, setRequireConfirmation, formatMoneda]);
 
     useEffect(() => {
         const pagoActual = watchedValues[2]; // valor de pago
 
-        if (pagoActual === "cuota" && watchedValues[1] !== '') {
-            setValue("abono", ''); // Reinicia el valor de abono solo si no es 0
-        } else if (pagoActual === "abono" && watchedValues[0] !== '') {
-            setValue("cuotas", ''); // Reinicia el valor de cuotas solo si no es 0
+        if (!watchedValues || !data || data.length === 0) return;
+
+        // Limpieza de campos cuando se cambia el tipo de pago
+        if (pagoActual === "cuota") {
+            // Si cambiamos a cuota, reiniciamos el abono
+            if (watchedValues[1] !== 0) {
+                setValue("abono", 0);
+                setValorAbonoFormateado('');
+            }
+        } else if (pagoActual === "abono") {
+            // Si cambiamos a abono, reiniciamos las cuotas
+            if (watchedValues[0] !== '') {
+                setValue("cuotas", '');
+            }
         }
 
+        // Cálculo del nuevo saldo
+        let nuevoSaldoCalculado = saldoActual;
         if (pagoActual === "cuota") {
             const numCuotas = parseInt(watchedValues[0] || 0);
-            const valorCuota = data.length > 0 ? data[0]['valor_cuota'] : 0;
-            setNuevoSaldo(saldoActual - (numCuotas * valorCuota));
-            setValue("nuevoSaldo", saldoActual - (numCuotas * valorCuota));
+            const valorCuota = data[0].valor_cuota || 0;
+            nuevoSaldoCalculado = saldoActual - (numCuotas * valorCuota);
         } else if (pagoActual === "abono") {
             const valorAbono = parseInt(watchedValues[1] || 0);
-            setNuevoSaldo(saldoActual - valorAbono);
-            setValue("nuevoSaldo", saldoActual - valorAbono);
-        } else {
-            setNuevoSaldo(saldoActual);
-            setValue("nuevoSaldo", saldoActual);
+            nuevoSaldoCalculado = saldoActual - valorAbono;
         }
-    }, [watchedValues, data, setValue, saldoActual]);
+
+        // Solo actualizamos si realmente hay un cambio
+        if (nuevoSaldo !== nuevoSaldoCalculado) {
+            setNuevoSaldo(nuevoSaldoCalculado);
+            setValue("nuevoSaldo", nuevoSaldoCalculado);
+        }
+    }, [watchedValues, data, setValue, saldoActual, nuevoSaldo]);
+
+
+
+    useEffect(() => {
+        // Actualizar los valores formateados cada vez que cambien los valores numéricos
+        if (nuevoSaldo !== undefined) {
+            setNuevoSaldoFormateado(formatMoneda(nuevoSaldo));
+        }
+
+        if (saldoActual !== undefined) {
+            setSaldoActualFormateado(formatMoneda(saldoActual));
+        }
+
+        if (data && data.length > 0 && data[0].cuotas !== undefined && data[0].valor_cuota !== undefined) {
+            const totalVenta = data[0].cuotas * data[0].valor_cuota;
+            setTotalVentaFormateado(formatMoneda(totalVenta));
+        }
+    }, [nuevoSaldo, saldoActual, data, formatMoneda]);
+
+    // Manejador de cambio para el campo de abono con formato de moneda
+    const handleAbonoChange = useCallback((e) => {
+        // Obtener solo los dígitos del valor ingresado
+        const valorInput = e.target.value || '';
+        const valorNumerico = valorInput.toString().replace(/[^\d]/g, '');
+
+        // Siempre establecer un valor válido para 'abono'
+        if (valorNumerico === '') {
+            setValue('abono', 0);
+            // Para el display usamos cadena vacía
+            setValorAbonoFormateado('');
+        } else {
+            const numero = parseInt(valorNumerico, 10);
+
+            // Actualizar el valor real en el formulario (sin formato)
+            setValue('abono', numero);
+
+            // Actualizar el valor formateado para mostrar
+            setValorAbonoFormateado(formatMoneda(numero));
+        }
+    }, [setValue, formatMoneda]);
 
     const onSubmit = async (dataForm) => {
         setIsLoading(true);
+
+        // Aseguramos que todos los valores son números
         const datosParseados = {
             ...dataForm,
             cuotas: dataForm.cuotas ? parseInt(dataForm.cuotas) : 0,
             abono: dataForm.abono ? parseInt(dataForm.abono) : 0,
-            totalVenta: parseInt(dataForm.totalVenta),
-            saldoActual: parseInt(dataForm.saldoActual),
-            nuevoSaldo: parseInt(dataForm.nuevoSaldo),
+            totalVenta: parseInt(data[0]['cuotas'] * data[0]['valor_cuota']),
+            saldoActual: parseInt(saldoActual),
+            nuevoSaldo: parseInt(nuevoSaldo),
         }
 
         if (datosParseados.nuevoSaldo < 0) {
-
             setIsLoading(false);
             return;
         }
 
         try {
-
-
             if (datosParseados.pago === 'cuota') {
                 const dataCuota = {
                     venta_id: id,
@@ -248,22 +337,59 @@ export default function Page() {
                 </div>
                 <InputField label="Producto" register={register} name="producto" required={true} errors={errors} isDisabled={true} value="Credito" />
                 <div>
-                    <InputField label="Total venta" register={register} name="totalVenta" required={true} errors={errors} isDisabled={true} value={data[0]['cuotas'] * data[0]['valor_cuota']} type='number' />
-                    <InputField label="Saldo actual" register={register} name="saldoActual" required={true} errors={errors} isDisabled={true} value={saldoActual} type={'number'} />
+                    <InputField
+                        label="Total venta"
+                        register={register}
+                        name="totalVenta"
+                        required={true}
+                        errors={errors}
+                        isDisabled={true}
+                        value={totalVentaFormateado}
+                    />
+                    <InputField
+                        label="Saldo actual"
+                        register={register}
+                        name="saldoActual"
+                        required={true}
+                        errors={errors}
+                        isDisabled={true}
+                        value={saldoActualFormateado}
+                    />
                 </div>
 
                 {pagoSeleccionado !== 'no pago' && pagoSeleccionado !== 'siguiente dia' && (
                     <>
-                        {pagoSeleccionado === 'cuota' ?
-                            (<InputField label="Numero de cuotas" name="cuotas" register={register} required={true}
+                        {pagoSeleccionado === 'cuota' ? (
+                            <InputField
+                                label="Numero de cuotas"
+                                name="cuotas"
+                                register={register}
+                                required={true}
                                 type='number'
-                                errors={errors} handleOnChange={(e) => setValue('cuotas', e.target.value)} />)
-                            :
-                            (<InputField label="Valor abono" name="abono" register={register} required={true}
-                                type={'number'}
-                                errors={errors} handleOnChange={(e) => setValue('abono', e.target.value)} />)}
-                        < InputField label="Nuevo saldo" register={register} name="nuevoSaldo" required={true} errors={errors} isDisabled={true} value={nuevoSaldo} type={'number'}
-                            validate={validateNuevoSaldo} />
+                                errors={errors}
+                                handleOnChange={(e) => setValue('cuotas', e.target.value)}
+                            />
+                        ) : (
+                            <InputField
+                                label="Valor abono"
+                                name="abono"
+                                register={register}
+                                required={true}
+                                errors={errors}
+                                value={valorAbonoFormateado || ''}
+                                handleOnChange={handleAbonoChange}
+                            />
+                        )}
+                        <InputField
+                            label="Nuevo saldo"
+                            register={register}
+                            name="nuevoSaldo"
+                            required={true}
+                            errors={errors}
+                            isDisabled={true}
+                            value={nuevoSaldoFormateado}
+                            validate={validateNuevoSaldo}
+                        />
                         <SelectField
                             label="Metodo de pago"
                             register={register}
@@ -275,12 +401,9 @@ export default function Page() {
                             errors={errors}
                         />
                     </>
-
-
                 )}
 
-
-                <div className="flex-1 flex flex-col justify-end">
+                <div className="flex-1 flex flex-col justify-end pb-4">
                     <div className="flex gap-4 items-center">
                         <button
                             type="button"
