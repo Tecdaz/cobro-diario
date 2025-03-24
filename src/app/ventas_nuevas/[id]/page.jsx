@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLayout } from '@/contexts/LayoutContext';
-import { getVentaById, updateVentaData, deleteVenta } from '@/lib/db';
+import { getVentaById, updateVentaData, deleteVenta, checkVentaRecords, deleteAllVentaRecords } from '@/lib/db';
 import { useParams, useRouter } from 'next/navigation';
 import InputField from '@/components/InputField';
 import SelectField from '@/components/SelectField';
@@ -81,6 +81,31 @@ export default function EditarVenta() {
             try {
                 setIsDeleting(true);
                 setError('');
+
+                // Verificar si hay registros relacionados
+                const records = await checkVentaRecords(id);
+
+                // Si hay registros relacionados, mostrar una confirmación adicional
+                if (records.totalRecords > 0) {
+                    let mensaje = 'Esta venta tiene registros relacionados:\n';
+
+                    if (records.hasCuotas) mensaje += '- Cuotas registradas\n';
+                    if (records.hasAbonos) mensaje += '- Abonos registrados\n';
+                    if (records.hasNoPagos) mensaje += '- Registros de no pagos\n';
+                    if (records.hasSiguienteDia) mensaje += '- Programado para otro día\n';
+
+                    mensaje += '\nSi continúa, todos estos registros serán eliminados. ¿Desea continuar?';
+
+                    if (!window.confirm(mensaje)) {
+                        setIsDeleting(false);
+                        return;
+                    }
+
+                    // Eliminar todos los registros relacionados
+                    await deleteAllVentaRecords(id);
+                }
+
+                // Eliminar la venta
                 await deleteVenta(id);
                 router.push("/ventas_nuevas");
             } catch (error) {

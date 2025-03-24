@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useLayout } from '@/contexts/LayoutContext';
 import { getVentasHoy } from '@/lib/db';
 import VentaCard from '@/components/VentaCard';
-
+import { useAuth } from '@/contexts/AuthContext';
 export default function VentasNuevas() {
+    const { user, cartera } = useAuth();
     const { handleTitleChange } = useLayout();
     const [ventas, setVentas] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -16,7 +17,7 @@ export default function VentasNuevas() {
         const fetchVentas = async () => {
             try {
                 setIsLoading(true);
-                const data = await getVentasHoy();
+                const data = await getVentasHoy(user, cartera.id_cartera);
                 setVentas(data || []);
             } catch (error) {
                 console.error("Error al cargar ventas:", error);

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import Header from '@/components/Header'
 import NavigationModal from '@/components/NavigationModal'
 import NavBar from '@/components/NavBar'
-import { getCartera } from '@/lib/db'
+import { getCartera, supabase } from '@/lib/db'
 
 // Rutas públicas que no requieren autenticación
 const publicRoutes = ['/login', '/register']
@@ -22,6 +22,19 @@ export default function RouteProtector({ children }) {
         const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
         setIsPublicRoute(isPublic)
 
+        // Función para manejar errores de autenticación
+        const handleAuthError = async () => {
+            try {
+                // Intentar limpiar la sesión completamente
+                await supabase.auth.signOut();
+                console.log('Sesión cerrada debido a problemas de autenticación');
+                router.push('/login');
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                router.push('/login');
+            }
+        };
+
         // Si no está cargando, verificar autenticación
         if (!loading) {
             if (!user && !isPublic) {
@@ -30,9 +43,26 @@ export default function RouteProtector({ children }) {
             } else if (user && isPublic) {
                 // Está autenticado pero está en una ruta pública (login/register), redirigir a dashboard
                 router.push('/dashboard')
+            } else if (user && !isPublic) {
+                // Usuario autenticado en ruta protegida - verificar si la sesión es válida
+                (async () => {
+                    try {
+                        // Verificar la cartera para confirmar que la sesión es válida
+                        const carteraData = await getCartera(user.id);
+                        setCartera(carteraData);
+                    } catch (error) {
+                        console.error('Error al verificar sesión:', error);
+                        // Si hay error (probablemente token inválido), cerrar sesión
+                        if (error.message?.includes('Invalid refresh token') ||
+                            error.message?.includes('JWT') ||
+                            error.status === 401) {
+                            await handleAuthError();
+                        }
+                    }
+                })();
             }
         }
-    }, [user, loading, pathname, router])
+    }, [user, loading, pathname, router, setCartera]);
 
     // Mostrar indicador de carga mientras se verifica la autenticación
     if (loading) {

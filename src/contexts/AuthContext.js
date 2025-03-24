@@ -24,15 +24,17 @@ export function AuthProvider({ children }) {
         }
     })
 
-
-
-
-    // Comprobar si hay una sesión activa al cargar
+    // Comprobar si hay una sesión activa al cargar y configurar renovación automática de tokens
     useEffect(() => {
-
         async function getSession() {
             setLoading(true)
             try {
+                // Habilitar la renovación automática de tokens
+                await supabase.auth.setSession({
+                    refresh_token_threshold: 60, // Renovar cuando falten 60 segundos para expirar
+                    autoRefreshToken: true
+                });
+
                 const { data: { session }, error } = await supabase.auth.getSession()
 
                 if (session) {
@@ -58,19 +60,29 @@ export function AuthProvider({ children }) {
 
         getSession()
 
-
-
-
         // Configurar oyente para cambios en la autenticación
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            (event, session) => {
+            async (event, session) => {
                 if (event === 'SIGNED_IN' && session) {
                     setUser(session.user)
-                    getCartera(session.user.id).then(carteraData => {
-                        setCartera(carteraData) // Establecer la cartera
-                    })
+                    // Establecer la cartera después de iniciar sesión
+                    try {
+                        const carteraData = await getCartera(session.user.id)
+                        setCartera(carteraData)
+                    } catch (error) {
+                        console.error('Error al obtener la cartera:', error)
+                    }
                 } else if (event === 'SIGNED_OUT') {
                     setUser(null)
+                    setCartera({
+                        id_cartera: null,
+                        cartera: {
+                            nombre: null
+                        }
+                    })
+                } else if (event === 'TOKEN_REFRESHED') {
+                    // Actualizar usuario cuando se renueve el token
+                    setUser(session.user)
                 }
             }
         )

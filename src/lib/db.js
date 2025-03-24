@@ -208,7 +208,7 @@ export async function updateClientData(clientId, clientData) {
     return data;
 }
 
-export async function getVentasHoy() {
+export async function getVentasHoy(user, carteraId) {
     const startOfDay = getStartOfTheDay()
     const endOfDay = getEndOfTheDay()
 
@@ -225,6 +225,8 @@ export async function getVentasHoy() {
         `)
         .gte('created_at', startOfDay.toISOString())
         .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
         .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -570,4 +572,82 @@ export async function setDefaultCartera(userId, carteraId) {
     if (updateError) throw updateError;
 
     return { success: true };
+}
+
+export async function checkVentaRecords(ventaId) {
+    // Verificar registros en cuota
+    const { count: cuotasCount, error: cuotasError } = await supabase
+        .from('cuota')
+        .select('id', { count: 'exact' })
+        .eq('venta_id', ventaId);
+
+    if (cuotasError) throw cuotasError;
+
+    // Verificar registros en abono
+    const { count: abonosCount, error: abonosError } = await supabase
+        .from('abono')
+        .select('id', { count: 'exact' })
+        .eq('venta_id', ventaId);
+
+    if (abonosError) throw abonosError;
+
+    // Verificar registros en no_pago
+    const { count: noPagosCount, error: noPagosError } = await supabase
+        .from('no_pago')
+        .select('id', { count: 'exact' })
+        .eq('id_venta', ventaId);
+
+    if (noPagosError) throw noPagosError;
+
+    // Verificar registros en siguiente_dia
+    const { count: siguienteDiaCount, error: siguienteDiaError } = await supabase
+        .from('siguiente_dia')
+        .select('id', { count: 'exact' })
+        .eq('venta_id', ventaId);
+
+    if (siguienteDiaError) throw siguienteDiaError;
+
+    return {
+        hasCuotas: cuotasCount > 0,
+        hasAbonos: abonosCount > 0,
+        hasNoPagos: noPagosCount > 0,
+        hasSiguienteDia: siguienteDiaCount > 0,
+        totalRecords: cuotasCount + abonosCount + noPagosCount + siguienteDiaCount
+    };
+}
+
+export async function deleteAllVentaRecords(ventaId) {
+    // Eliminar registros en cuota
+    const { error: cuotasError } = await supabase
+        .from('cuota')
+        .delete()
+        .eq('venta_id', ventaId);
+
+    if (cuotasError) throw cuotasError;
+
+    // Eliminar registros en abono
+    const { error: abonosError } = await supabase
+        .from('abono')
+        .delete()
+        .eq('venta_id', ventaId);
+
+    if (abonosError) throw abonosError;
+
+    // Eliminar registros en no_pago
+    const { error: noPagosError } = await supabase
+        .from('no_pago')
+        .delete()
+        .eq('id_venta', ventaId);
+
+    if (noPagosError) throw noPagosError;
+
+    // Eliminar registros en siguiente_dia
+    const { error: siguienteDiaError } = await supabase
+        .from('siguiente_dia')
+        .delete()
+        .eq('venta_id', ventaId);
+
+    if (siguienteDiaError) throw siguienteDiaError;
+
+    return true;
 }

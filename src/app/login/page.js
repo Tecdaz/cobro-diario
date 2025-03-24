@@ -23,6 +23,12 @@ export default function Login() {
     useEffect(() => {
         if (user) {
             router.push('/dashboard')
+        } else {
+            // Cargar el último correo utilizado si existe
+            const savedEmail = localStorage.getItem('lastUserEmail')
+            if (savedEmail) {
+                setEmail(savedEmail)
+            }
         }
     }, [user, router])
 
@@ -32,16 +38,32 @@ export default function Login() {
         setError(null)
 
         try {
+            // Guardar el correo en localStorage para futuros inicios de sesión
+            localStorage.setItem('lastUserEmail', email)
+
             const { data, error } = await supabase.auth.signInWithPassword({
                 email,
                 password,
             })
 
-            if (error) throw error
+            if (error) {
+                if (error.message.includes('Invalid login credentials')) {
+                    throw new Error('Credenciales inválidas. Por favor verifique su correo y contraseña.')
+                } else if (error.message.includes('Invalid refresh token')) {
+                    // Manejo específico para error de token de refresco
+                    console.error('Error de token de refresco:', error)
+                    // Intentar limpiar la sesión
+                    await supabase.auth.signOut()
+                    throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.')
+                } else {
+                    throw error
+                }
+            }
 
             // Redireccionar al usuario a la página principal después del inicio de sesión exitoso
             router.push('/dashboard')
         } catch (error) {
+            console.error('Error de autenticación:', error)
             setError(error.message || 'Error al iniciar sesión')
         } finally {
             setLoading(false)
