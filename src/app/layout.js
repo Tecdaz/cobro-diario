@@ -3,6 +3,7 @@ import './globals.css'
 import { LayoutProvider } from '@/contexts/LayoutContext'
 import { AuthProvider } from '@/contexts/AuthContext'
 import RouteProtector from "@/components/RouteProtector"
+import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,7 @@ export default function RootLayout({ children }) {
             <RouteProtector>
               <div className="mx-auto w-full max-w-[768px] h-full flex flex-col">
                 {children}
+                <Analytics />
               </div>
             </RouteProtector>
           </body>
