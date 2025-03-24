@@ -51,7 +51,7 @@ export default function CardCliente(props) {
 
     return (
         <div className="flex flex-col bg-white">
-            <div className={`flex h-auto border border-gray-200 items-center px-3 py-2 gap-3 hover:bg-gray-50 ${className}`}>
+            <div className={`flex h-auto border border-gray-200 items-center px-4 py-2 gap-3 hover:bg-gray-50 ${className}`}>
                 <IconoCliente
                     status={data.status}
                     onClick={toggleInfoExtra}
