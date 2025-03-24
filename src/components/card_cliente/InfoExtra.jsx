@@ -11,13 +11,17 @@ export default function InfoExtra(props) {
         router.push(`/pagos/${data.id}`)
     }
 
-    // Manejador para llamadas telefónicas y mapas
-    const handleClick = (e, title, value) => {
+    // Manejador para llamadas telefónicas, mapas y WhatsApp
+    const handleClick = (e, title, value, action = 'default') => {
         // Este manejador puede usarse para realizar acciones adicionales
         if (title === "Dirección") {
             console.log(`Abriendo mapa para la dirección: ${value}`)
-        } else {
-            console.log(`Llamando al número: ${value}`)
+        } else if (title === "Teléfono") {
+            if (action === 'whatsapp') {
+                console.log(`Abriendo WhatsApp para el número: ${value}`)
+            } else {
+                console.log(`Llamando al número: ${value}`)
+            }
         }
     }
 
