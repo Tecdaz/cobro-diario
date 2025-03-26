@@ -49,6 +49,7 @@ export default function Clientes() {
             client.direccion.toLowerCase().includes(searchValue.toLowerCase()) ||
             client.documento.includes(searchValue)
         );
+        console.log(filtered);
         setFilteredClients(filtered);
     };
 
@@ -63,7 +64,7 @@ export default function Clientes() {
                 ) : (
                     <div className="flex flex-col min-h-screen bg-gray-50">
                         <div className="bg-white shadow-sm p-4">
-                            <SearchBar onSearch={handleSearch} />
+                            <SearchBar onChange={handleSearch} value={searchTerm} />
                         </div>
 
                         {!filteredClients.length ? (

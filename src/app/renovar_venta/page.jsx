@@ -52,43 +52,38 @@ export default function page() {
         setFilteredClients(filtered);
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center min-h-screen">
-                <div className="text-lg">Cargando clientes...</div>
-            </div>
-        );
-    }
-
-    if (!filteredClients.length) {
-        return (
-            <div className="flex flex-col gap-4 p-4">
-                <div className="sticky z-10 bg-gray-50 p-4">
-                    <SearchBar onSearch={handleSearch} />
-                </div>
-                <div className="flex justify-center items-center min-h-[calc(100vh-200px)]">
-                    <div className="text-lg text-gray-500">
-                        {searchTerm ? "No se encontraron clientes" : "No hay clientes disponibles"}
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <div className="flex flex-col gap-4">
-            <div className="sticky z-10 bg-gray-50 p-4">
-                <SearchBar onSearch={handleSearch} />
-            </div>
-            <div className="flex flex-col">
-                {filteredClients.map((client) => (
-                    <ClientCard
-                        key={client.id}
-                        href={`/renovar_venta/${client.id}`}
-                        client={client}
-                    />
-                ))}
-            </div>
-        </div>
+        <>{
+            isLoading ? (
+                <div className="flex justify-center items-center min-h-screen" >
+                    <div className="text-lg">Cargando clientes...</div>
+                </div>)
+                :
+                (<div className="flex flex-col min-h-screen bg-gray-50">
+                    <div className="bg-white shadow-sm p-4">
+                        <SearchBar onChange={handleSearch} value={searchTerm} />
+                    </div>
+
+                    {!filteredClients.length ? (
+                        <div className="flex justify-center items-center flex-1 p-4">
+                            <div className="text-lg text-gray-500">
+                                {searchTerm ? "No se encontraron clientes" : "No hay clientes registrados"}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="flex flex-col p-4 gap-2">
+                            {filteredClients.map((client) => (
+                                <ClientCard
+                                    key={client.id}
+                                    href={`/renovar_venta/${client.id}`}
+                                    client={client}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>)
+        }
+        </>
+
     )
 }
