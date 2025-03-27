@@ -6,6 +6,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowUpDown, Search, List, X } from "lucide-react";
+import { getTodayPayments, getTodasVentas } from "@/lib/db";
 
 export default function Pagos() {
     const router = useRouter();
@@ -17,49 +18,41 @@ export default function Pagos() {
     const [ordenarPor, setOrdenarPor] = useState("nombre");
     const [ordenAscendente, setOrdenAscendente] = useState(true);
     const [filtroFrecuencia, setFiltroFrecuencia] = useState("");
+    const [pagosHoy, setPagosHoy] = useState([]);
+    const [mostrarSoloPagosHoy, setMostrarSoloPagosHoy] = useState(false);
 
     useEffect(() => {
         handleTitleChange("Historial de Pagos");
 
-        const fetchVentas = async () => {
+        const fetchData = async () => {
             try {
+                // Obtener ventas
+                const ventasData = await getTodasVentas(user, cartera.id_cartera);
 
-                const { data, error } = await supabase
-                    .from('venta')
-                    .select(`
-                            id,
-                            producto,
-                            precio,
-                            valor_cuota,
-                            cuotas,
-                            frecuencia,
-                            created_at,
-                            activa,
-                            cliente(
-                                id,
-                                nombre,
-                                telefono,
-                                direccion,
-                                documento
-                            )
-                        `)
-                    .eq('cobrador', user.id)
-                    .eq('id_cartera', cartera.id_cartera)
-                    .eq('activa', true)
-                    .order('created_at', { ascending: false });
+                console.log({ ventasData });
+                setVentas(ventasData || []);
 
-                if (error) throw error;
-                setVentas(data || []);
+                // Obtener pagos de hoy
+                try {
+                    const pagosData = await getTodayPayments(user, cartera.id_cartera);
+                    setPagosHoy(pagosData || []);
+                    console.log(pagosData);
+                } catch (error) {
+                    console.error("Error al obtener pagos de hoy:", error);
+                    setIsLoading(false);
+                }
+
+
 
                 setIsLoading(false);
             } catch (error) {
-                console.error("Error al obtener ventas:", error);
+                console.error("Error al obtener datos:", error);
                 setIsLoading(false);
             }
         };
 
         if (user && cartera.id_cartera) {
-            fetchVentas();
+            fetchData();
         }
     }, [handleTitleChange, user, cartera.id_cartera]);
 
@@ -120,15 +113,18 @@ export default function Pagos() {
     const ventasFiltradas = ventas.filter(venta => {
         // Filtro por texto de búsqueda
         const coincideTexto =
-            venta.cliente.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            venta.cliente.documento.toLowerCase().includes(busqueda.toLowerCase()) ||
+            venta.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+            venta.documento.toLowerCase().includes(busqueda.toLowerCase()) ||
             venta.producto.toLowerCase().includes(busqueda.toLowerCase()) ||
-            venta.cliente.direccion.toLowerCase().includes(busqueda.toLowerCase());
+            venta.direccion.toLowerCase().includes(busqueda.toLowerCase());
 
         // Filtro por frecuencia
         const coincideFrecuencia = filtroFrecuencia === "" || venta.frecuencia === filtroFrecuencia;
 
-        return coincideTexto && coincideFrecuencia;
+        // Filtro por pagos de hoy
+        const esPagoHoy = !mostrarSoloPagosHoy || pagosHoy.some(pago => pago.id === venta.id);
+
+        return coincideTexto && coincideFrecuencia && esPagoHoy;
     });
 
     const ventasOrdenadas = [...ventasFiltradas].sort((a, b) => {
@@ -136,12 +132,12 @@ export default function Pagos() {
 
         switch (ordenarPor) {
             case 'nombre':
-                valorA = a.cliente.nombre.toLowerCase();
-                valorB = b.cliente.nombre.toLowerCase();
+                valorA = a.nombre.toLowerCase();
+                valorB = b.nombre.toLowerCase();
                 break;
             case 'documento':
-                valorA = a.cliente.documento;
-                valorB = b.cliente.documento;
+                valorA = a.documento;
+                valorB = b.documento;
                 break;
             case 'fecha':
                 valorA = new Date(a.created_at);
@@ -152,8 +148,8 @@ export default function Pagos() {
                 valorB = b.valor_cuota * b.cuotas;
                 break;
             default:
-                valorA = a.cliente.nombre.toLowerCase();
-                valorB = b.cliente.nombre.toLowerCase();
+                valorA = a.nombre.toLowerCase();
+                valorB = b.nombre.toLowerCase();
         }
 
         if (valorA < valorB) return ordenAscendente ? -1 : 1;
@@ -165,17 +161,31 @@ export default function Pagos() {
 
     return (
         <div className="flex flex-col p-4 gap-4">
-            <div className="relative mb-2">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <Search className="w-5 h-5 text-gray-500" />
+            <div className="flex items-center justify-between mb-4">
+                <div className="relative flex-1">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                        <Search className="w-5 h-5 text-gray-500" />
+                    </div>
+                    <input
+                        type="text"
+                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
+                        placeholder="Buscar por nombre, documento o producto"
+                        value={busqueda}
+                        onChange={handleBusqueda}
+                    />
                 </div>
-                <input
-                    type="text"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
-                    placeholder="Buscar por nombre, documento o producto"
-                    value={busqueda}
-                    onChange={handleBusqueda}
-                />
+                <div className="ml-4">
+                    <button
+                        onClick={() => setMostrarSoloPagosHoy(!mostrarSoloPagosHoy)}
+                        className={`bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center gap-1 hover:bg-green-200 transition-colors ${mostrarSoloPagosHoy ? 'ring-2 ring-green-500' : ''}`}
+                    >
+                        <List size={14} />
+                        <span>{pagosHoy.length} Pagos Hoy</span>
+                        {mostrarSoloPagosHoy && (
+                            <X size={14} className="ml-1" />
+                        )}
+                    </button>
+                </div>
             </div>
 
             {/* Filtros de frecuencia */}
@@ -287,9 +297,9 @@ export default function Pagos() {
                                             }`}>
                                             {formatFrecuencia(venta.frecuencia)}
                                         </span>
-                                        <p className="font-medium">{venta.cliente.nombre}</p>
+                                        <p className="font-medium">{venta.nombre}</p>
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">{venta.cliente.direccion}</p>
+                                    <p className="text-xs text-gray-500 mt-1">{venta.direccion}</p>
                                 </div>
                                 <div className="text-sm flex items-center">
                                     {formatFecha(venta.created_at)}

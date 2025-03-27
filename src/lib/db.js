@@ -12,6 +12,18 @@ function logSupabaseRequest(action, request, result) {
     console.log(`[Supabase ${action}]`, 'Request:', request, 'Result:', result);
 }
 
+
+export async function getTodasVentas(user, carteraId) {
+    const { data, error } = await supabase
+        .from('view_todas_ventas')
+        .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
+        .order('nombre')
+
+    if (error) throw error
+    return data
+}
 export async function getTodayCobros(user, carteraId) {
     console.log('Solicitando cobros del día para usuario:', user.id, 'cartera:', carteraId);
     const request = { cobrador: user.id, id_cartera: carteraId };
