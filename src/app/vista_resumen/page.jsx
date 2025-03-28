@@ -24,7 +24,8 @@ import {
     getAbonosDelDia,
     getCuotasDelDia,
     getNoPagosDelDia,
-    getSiguienteDiaDelDia
+    getSiguienteDiaDelDia,
+    getGastosIngresosDelDia
 } from "@/lib/db"
 import { getStartOfTheDay, getEndOfTheDay } from "@/lib/utils"
 
@@ -48,7 +49,12 @@ export default function VistaResumen() {
     const [cobrosOtrasFechas, setCobrosOtrasFechas] = useState(0)
     const [cobrosNoPago, setCobrosNoPago] = useState(0)
     const [cobrosSiguienteDia, setCobrosSiguienteDia] = useState(0)
-
+    const [gastosIngresosDelDia, setGastosIngresosDelDia] = useState([])
+    const [gastosDelDia, setGastosDelDia] = useState([])
+    const [ingresosDelDia, setIngresosDelDia] = useState([])
+    const [totalGastosDelDia, setTotalGastosDelDia] = useState(0)
+    const [totalIngresosDelDia, setTotalIngresosDelDia] = useState(0)
+    const [movimientosDelDia, setMovimientosDelDia] = useState([])
 
 
     useEffect(() => {
@@ -100,6 +106,20 @@ export default function VistaResumen() {
         setRenovacionesDelDia(renovaciones)
     }
 
+    const categorizeGastosIngresos = (gastosIngresos) => {
+        const gastos = gastosIngresos.filter(gasto => gasto.tipo === 'gasto')
+        const ingresos = gastosIngresos.filter(ingreso => ingreso.tipo === 'ingreso')
+
+        const totalGastos = gastos.reduce((acc, gasto) => acc + gasto.valor, 0)
+        const totalIngresos = ingresos.reduce((acc, ingreso) => acc + ingreso.valor, 0)
+        const movimientos = totalIngresos - totalGastos
+        setTotalGastosDelDia(totalGastos)
+        setTotalIngresosDelDia(totalIngresos)
+        setGastosDelDia(gastos)
+        setIngresosDelDia(ingresos)
+        setMovimientosDelDia(movimientos)
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -111,7 +131,8 @@ export default function VistaResumen() {
                     abonosDelDiaData,
                     cuotasDelDiaData,
                     noPagosDelDiaData,
-                    siguienteDiaDelDiaData] = await Promise.all([
+                    siguienteDiaDelDiaData,
+                    gastosIngresosDelDiaData] = await Promise.all([
                         totalClientes(user, cartera.id_cartera),
                         clientesNuevos(user, cartera.id_cartera),
                         getNombreCobrador(user),
@@ -120,7 +141,8 @@ export default function VistaResumen() {
                         getAbonosDelDia(user, cartera.id_cartera),
                         getCuotasDelDia(user, cartera.id_cartera),
                         getNoPagosDelDia(user, cartera.id_cartera),
-                        getSiguienteDiaDelDia(user, cartera.id_cartera)
+                        getSiguienteDiaDelDia(user, cartera.id_cartera),
+                        getGastosIngresosDelDia(user, cartera.id_cartera)
                     ])
                 setTotalClientesState(totalClientesData)
                 setClientesNuevosState(clientesNuevosData)
@@ -131,8 +153,10 @@ export default function VistaResumen() {
                 setCuotasDelDia(cuotasDelDiaData)
                 setCobrosNoPago(noPagosDelDiaData)
                 setCobrosSiguienteDia(siguienteDiaDelDiaData)
+                setGastosIngresosDelDia(gastosIngresosDelDiaData)
 
 
+                categorizeGastosIngresos(gastosIngresosDelDiaData)
                 calculateDineroPretendido(pretendidosDelDiaData)
                 calculateDineroCobrado(abonosDelDiaData, cuotasDelDiaData)
                 calculateCobros(abonosDelDiaData, cuotasDelDiaData, pretendidosDelDiaData)
@@ -273,42 +297,46 @@ export default function VistaResumen() {
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Gastos Ingresos</h2>
                     <div className="w-full">
-                        <p className="font-medium mb-4">Movimientos del dia</p>
+                        <p className="font-medium mb-4">Movimientos del dia: {movimientosDelDia}</p>
 
-                        <p className="font-medium">Ingresos: 10000</p>
-                        <Table className="mb-6">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Concepto</TableHead>
-                                    <TableHead>Monto</TableHead>
-                                    <TableHead>Observacion</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Aporte capital</TableCell>
-                                    <TableCell>10000</TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                        <p className="font-medium mb-4">Gastos: 20000</p>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Concepto</TableHead>
-                                    <TableHead>Monto</TableHead>
-                                    <TableHead>Observacion</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Gasolina</TableCell>
-                                    <TableCell>20000</TableCell>
-                                    <TableCell></TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <p className="font-medium">Ingresos: {totalIngresosDelDia}</p>
+                        {ingresosDelDia.length > 0 && (
+                            <Table className="mb-6">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Concepto</TableHead>
+                                        <TableHead>Monto</TableHead>
+                                        <TableHead>Observacion</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>Aporte capital</TableCell>
+                                        <TableCell>10000</TableCell>
+                                        <TableCell></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        )}
+                        <p className="font-medium mb-4">Gastos: {totalGastosDelDia}</p>
+                        {gastosDelDia.length > 0 && (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Concepto</TableHead>
+                                        <TableHead>Monto</TableHead>
+                                        <TableHead>Observacion</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>Gasolina</TableCell>
+                                        <TableCell>20000</TableCell>
+                                        <TableCell></TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        )}
                     </div>
                 </div>
 
