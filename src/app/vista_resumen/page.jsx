@@ -242,7 +242,7 @@ export default function VistaResumen() {
                     <div className="w-full">
                         <p className="font-medium mb-4">Total de ventas: {ventasDelDia.length}</p>
 
-                        <p className="font-medium">Ventas nuevas: {ventasNuevasDelDia.length}</p>
+                        <p className="font-medium mb-4">Ventas nuevas: {ventasNuevasDelDia.length}</p>
                         {ventasNuevasDelDia.length > 0 && (
                             <Table className="w-full max-w-full mb-6">
                                 <TableHeader>
@@ -319,7 +319,7 @@ export default function VistaResumen() {
                     <div className="w-full">
                         <p className="font-medium mb-4">Movimientos del dia: {formatCurrency(movimientosDelDia)}</p>
 
-                        <p className="font-medium">Ingresos: {formatCurrency(totalIngresosDelDia)}</p>
+                        <p className="font-medium mb-4">Ingresos: {formatCurrency(totalIngresosDelDia)}</p>
                         {ingresosDelDia.length > 0 && (
                             <Table className="mb-6">
                                 <TableHeader>
@@ -383,7 +383,7 @@ export default function VistaResumen() {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Gastos</TableCell>
-                                    <TableCell>{formatCurrency(totalGastosDelDia)}</TableCell>
+                                    <TableCell>{formatCurrency(totalGastosDelDia * -1)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Ingresos</TableCell>
