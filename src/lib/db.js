@@ -354,6 +354,22 @@ export async function verificarClienteNuevo(clienteId) {
     return count === 0;
 }
 
+export async function getVentasDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('venta')
+        .select('*, cliente(nombre, created_at)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
 export async function getResumenDiario(user, carteraId) {
     const startOfDay = getStartOfTheDay()
     const endOfDay = getEndOfTheDay()

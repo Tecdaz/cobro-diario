@@ -15,7 +15,9 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useLayout } from '@/contexts/LayoutContext'
 import { useEffect, useState } from 'react'
 
-import { totalClientes, clientesNuevos, getNombreCobrador } from "@/lib/db"
+import { totalClientes, clientesNuevos, getNombreCobrador, getVentasDelDia } from "@/lib/db"
+import { getStartOfTheDay, getEndOfTheDay } from "@/lib/utils"
+
 export default function VistaResumen() {
     const { user, cartera } = useAuth()
     const { handleTitleChange } = useLayout()
@@ -24,24 +26,45 @@ export default function VistaResumen() {
     const [totalClientesState, setTotalClientesState] = useState(0)
     const [clientesNuevosState, setClientesNuevosState] = useState([])
     const [nombreCobrador, setNombreCobrador] = useState('')
+    const [ventasDelDia, setVentasDelDia] = useState([])
+    const [renovacionesDelDia, setRenovacionesDelDia] = useState([])
+    const [ventasNuevasDelDia, setVentasNuevasDelDia] = useState([])
 
     useEffect(() => {
         handleTitleChange("Vista Resumen")
     }, [])
 
+    const assignVentasNuevas = (ventas) => {
+        const ventasNuevas = ventas.filter(
+            venta =>
+                (venta.cliente.created_at >=
+                    getStartOfTheDay().toISOString()) && (venta.cliente.created_at <= getEndOfTheDay().toISOString()))
+        setVentasNuevasDelDia(ventasNuevas)
+    }
+
+    const assignRenovaciones = (ventas) => {
+        const renovaciones = ventas.filter(
+            venta => venta.cliente.created_at < getStartOfTheDay().toISOString())
+        setRenovacionesDelDia(renovaciones)
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [totalClientesData, clientesNuevosData, nombreCobradorData] = await Promise.all([
+                const [totalClientesData, clientesNuevosData, nombreCobradorData, ventasDelDiaData] = await Promise.all([
                     totalClientes(user, cartera.id_cartera),
                     clientesNuevos(user, cartera.id_cartera),
-                    getNombreCobrador(user)
+                    getNombreCobrador(user),
+                    getVentasDelDia(user, cartera.id_cartera)
                 ])
                 setTotalClientesState(totalClientesData)
                 setClientesNuevosState(clientesNuevosData)
                 setNombreCobrador(nombreCobradorData)
-                console.log(clientesNuevosData)
-                console.log(totalClientesData)
+                setVentasDelDia(ventasDelDiaData)
+                assignVentasNuevas(ventasDelDiaData)
+                assignRenovaciones(ventasDelDiaData)
+                console.log(ventasNuevasDelDia)
+                console.log(renovacionesDelDia)
             } catch (error) {
                 setError(error)
             } finally {
@@ -99,55 +122,59 @@ export default function VistaResumen() {
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Ventas</h2>
                     <div className="w-full">
-                        <p className="font-medium mb-4">Total de ventas: 10</p>
+                        <p className="font-medium mb-4">Total de ventas: {ventasDelDia.length}</p>
 
-                        <p className="font-medium">Ventas nuevas: 5</p>
-                        <Table className="w-full max-w-full mb-6">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nombre</TableHead>
-                                    <TableHead>Monto</TableHead>
-                                    <TableHead>Frecuencia</TableHead>
-                                    <TableHead>Cuotas</TableHead>
-                                    <TableHead>Valor Cuota</TableHead>
-                                    <TableHead>Interes</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Juan Perez</TableCell>
-                                    <TableCell>100000</TableCell>
-                                    <TableCell>Semanal</TableCell>
-                                    <TableCell>4</TableCell>
-                                    <TableCell>80000</TableCell>
-                                    <TableCell>10%</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <p className="font-medium">Ventas nuevas: {ventasNuevasDelDia.length}</p>
+                        {ventasNuevasDelDia.length > 0 && (
+                            <Table className="w-full max-w-full mb-6">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Nombre</TableHead>
+                                        <TableHead>Monto</TableHead>
+                                        <TableHead>Frecuencia</TableHead>
+                                        <TableHead>Cuotas</TableHead>
+                                        <TableHead>Valor Cuota</TableHead>
+                                        <TableHead>Interes</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>Juan Perez</TableCell>
+                                        <TableCell>100000</TableCell>
+                                        <TableCell>Semanal</TableCell>
+                                        <TableCell>4</TableCell>
+                                        <TableCell>80000</TableCell>
+                                        <TableCell>10%</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        )}
 
-                        <p className="font-medium mb-4">Renovaciones: 5</p>
-                        <Table className="w-full overflow-x-auto">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nombre</TableHead>
-                                    <TableHead>Monto</TableHead>
-                                    <TableHead>Frecuencia</TableHead>
-                                    <TableHead>Cuotas</TableHead>
-                                    <TableHead>Valor Cuota</TableHead>
-                                    <TableHead>Interes</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Juan Perez</TableCell>
-                                    <TableCell>100000</TableCell>
-                                    <TableCell>Semanal</TableCell>
-                                    <TableCell>4</TableCell>
-                                    <TableCell>80000</TableCell>
-                                    <TableCell>10%</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <p className="font-medium mb-4">Renovaciones: {renovacionesDelDia.length}</p>
+                        {renovacionesDelDia.length > 0 && (
+                            <Table className="w-full overflow-x-auto">
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Nombre</TableHead>
+                                        <TableHead>Monto</TableHead>
+                                        <TableHead>Frecuencia</TableHead>
+                                        <TableHead>Cuotas</TableHead>
+                                        <TableHead>Valor Cuota</TableHead>
+                                        <TableHead>Interes</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    <TableRow>
+                                        <TableCell>Juan Perez</TableCell>
+                                        <TableCell>100000</TableCell>
+                                        <TableCell>Semanal</TableCell>
+                                        <TableCell>4</TableCell>
+                                        <TableCell>80000</TableCell>
+                                        <TableCell>10%</TableCell>
+                                    </TableRow>
+                                </TableBody>
+                            </Table>
+                        )}
                     </div>
                 </div>
 
