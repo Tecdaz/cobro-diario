@@ -370,6 +370,85 @@ export async function getVentasDelDia(user, carteraId) {
     return data;
 }
 
+export async function getPretendidosDelDia(user, carteraId) {
+    const { data, error } = await supabase
+        .from('ventas_pretendido')
+        .select('*')
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getAbonosDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('abono')
+        .select('*, venta(id, cobrador, id_cartera)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .not('venta', 'is', null)
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getNoPagosDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('no_pago')
+        .select('*, venta(cobrador, id_cartera)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .not('venta', 'is', null)
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getSiguienteDiaDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('siguiente_dia')
+        .select('*, venta(cobrador, id_cartera)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .not('venta', 'is', null)
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getCuotasDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('cuota')
+        .select('*, venta(cobrador, id_cartera)')
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .not('venta', 'is', null)
+        .eq('venta.cobrador', user.id)
+        .eq('venta.id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
 export async function getResumenDiario(user, carteraId) {
     const startOfDay = getStartOfTheDay()
     const endOfDay = getEndOfTheDay()
