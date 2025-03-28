@@ -16,7 +16,7 @@ export default function NavBar() {
                 <NavBarItem href="/nueva_venta" label="Nueva Venta">
                     <ShoppingCartIcon className="h-7 w-7" />
                 </NavBarItem>
-                <NavBarItem href="/gestion_gastos" label="Gastos">
+                <NavBarItem href="/gestion_gastos" label="Gestion Caja">
                     <BanknotesIcon className="h-7 w-7" />
                 </NavBarItem>
                 <NavBarItem href="/resumen" label="Resumen">

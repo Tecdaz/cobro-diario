@@ -35,7 +35,7 @@ export default function Header() {
         { title: "Nueva Venta", href: "/nueva_venta", icon: <ShoppingCartIcon className="h-5 w-5" /> },
         { title: "Ventas de Hoy", href: "/ventas_nuevas", icon: <CalendarIcon className="h-5 w-5" /> },
         { title: "Renovar Venta", href: "/renovar_venta", icon: <ArrowPathIcon className="h-5 w-5" /> },
-        { title: "Gestión Gastos", href: "/gestion_gastos", icon: <BanknotesIcon className="h-5 w-5" /> },
+        { title: "Gestion Caja", href: "/gestion_gastos", icon: <BanknotesIcon className="h-5 w-5" /> },
         { title: "Ventas otras fechas", href: "/ventas_otra_fecha", icon: <ClockIcon className="h-5 w-5" /> },
         { title: "Historial de Pagos", href: "/pagos", icon: <ReceiptRefundIcon className="h-5 w-5" /> },
     ]

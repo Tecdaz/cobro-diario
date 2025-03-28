@@ -14,7 +14,7 @@ export default function GestionGastos() {
     const { handleTitleChange } = useLayout();
     const { user, cartera } = useAuth();
     useEffect(() => {
-        handleTitleChange("Gestion de Gastos")
+        handleTitleChange("Gestion de caja")
     }, [handleTitleChange])
 
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm({
@@ -61,19 +61,22 @@ export default function GestionGastos() {
                 </div>
                 <InputField register={register} label="Valor" name="valor" type="number" errors={errors} />
                 <SelectField
-                    label="Descripción"
+                    label="Concepto"
                     name="descripcion"
                     register={register}
                     required={true}
                     errors={errors}
                     options={[
                         { value: "gasolina", label: "Gasolina" },
+                        { value: "cadena", label: "Cadena" },
+                        { value: "comision", label: "Comisión" },
+                        { value: "retiro", label: "Retiro de dinero" },
                         { value: "comida", label: "Comida" },
-                        { value: "transporte", label: "Transporte" },
                         { value: "papeleria", label: "Papelería" },
                         { value: "mantenimiento", label: "Mantenimiento vehículo" },
                         { value: "comunicacion", label: "Recargas/Plan de datos" },
                         { value: "parqueadero", label: "Parqueadero" },
+                        { value: "bonos", label: "Bonos" },
                         { value: "otro", label: "Otro" }
                     ]}
                 />
