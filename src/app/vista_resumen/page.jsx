@@ -15,7 +15,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useLayout } from '@/contexts/LayoutContext'
 import { useEffect, useState } from 'react'
 
-import { totalClientes, clientesNuevos } from "@/lib/db"
+import { totalClientes, clientesNuevos, getNombreCobrador } from "@/lib/db"
 export default function VistaResumen() {
     const { user, cartera } = useAuth()
     const { handleTitleChange } = useLayout()
@@ -23,6 +23,8 @@ export default function VistaResumen() {
     const [error, setError] = useState(null)
     const [totalClientesState, setTotalClientesState] = useState(0)
     const [clientesNuevosState, setClientesNuevosState] = useState([])
+    const [nombreCobrador, setNombreCobrador] = useState('')
+
     useEffect(() => {
         handleTitleChange("Vista Resumen")
     }, [])
@@ -30,12 +32,14 @@ export default function VistaResumen() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [totalClientesData, clientesNuevosData] = await Promise.all([
+                const [totalClientesData, clientesNuevosData, nombreCobradorData] = await Promise.all([
                     totalClientes(user, cartera.id_cartera),
-                    clientesNuevos(user, cartera.id_cartera)
+                    clientesNuevos(user, cartera.id_cartera),
+                    getNombreCobrador(user)
                 ])
                 setTotalClientesState(totalClientesData)
                 setClientesNuevosState(clientesNuevosData)
+                setNombreCobrador(nombreCobradorData)
                 console.log(clientesNuevosData)
                 console.log(totalClientesData)
             } catch (error) {
@@ -59,7 +63,7 @@ export default function VistaResumen() {
 
     return (
         <div id="resumen" className="flex flex-col items-center justify-center gap-8 px-4 py-8 bg-gray-100">
-            <h1 className="text-2xl font-bold text-center mb-6">Agustin Arias - Tandil1 - 28/03/2025</h1>
+            <h1 className="text-2xl font-bold text-center mb-6">{nombreCobrador} - {cartera.cartera.nombre} - {new Date().toLocaleDateString()}</h1>
             <div className="flex flex-col items-center justify-center gap-8 w-full max-w-5xl">
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Clientes</h2>

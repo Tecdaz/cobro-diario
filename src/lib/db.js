@@ -718,3 +718,14 @@ export async function deleteAllVentaRecords(ventaId) {
 
     return true;
 }
+
+export async function getNombreCobrador(user) {
+    const { data, error } = await supabase
+        .from('system_users')
+        .select('nombre')
+        .eq('id', user.id)
+        .single();
+
+    if (error) throw error;
+    return data.nombre;
+}
