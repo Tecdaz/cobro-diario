@@ -14,19 +14,38 @@ import {
 import { useAuth } from "@/contexts/AuthContext"
 import { useLayout } from '@/contexts/LayoutContext'
 import { useEffect, useState } from 'react'
+
+import { totalClientes, clientesNuevos } from "@/lib/db"
 export default function VistaResumen() {
     const { user, cartera } = useAuth()
     const { handleTitleChange } = useLayout()
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
-
+    const [totalClientesState, setTotalClientesState] = useState(0)
+    const [clientesNuevosState, setClientesNuevosState] = useState([])
     useEffect(() => {
         handleTitleChange("Vista Resumen")
     }, [])
 
     useEffect(() => {
-        if (user && cartera) {
-            setIsLoading(false)
+        const fetchData = async () => {
+            try {
+                const [totalClientesData, clientesNuevosData] = await Promise.all([
+                    totalClientes(user, cartera.id_cartera),
+                    clientesNuevos(user, cartera.id_cartera)
+                ])
+                setTotalClientesState(totalClientesData)
+                setClientesNuevosState(clientesNuevosData)
+                console.log(clientesNuevosData)
+                console.log(totalClientesData)
+            } catch (error) {
+                setError(error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+        if (user && cartera.id_cartera) {
+            fetchData()
         }
     }, [user, cartera])
 
@@ -35,7 +54,7 @@ export default function VistaResumen() {
     }
 
     if (error) {
-        return <div>Error: {error}</div>
+        return <div>Error: {error.message}</div>
     }
 
     return (
@@ -45,33 +64,31 @@ export default function VistaResumen() {
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Clientes</h2>
                     <div className="w-full">
-                        <p className="font-medium mb-4">Total de clientes: 10</p>
+                        <p className="font-medium mb-4">Total de clientes: {totalClientesState}</p>
 
-                        <p className="font-medium">Clientes nuevos: 5</p>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Nombre</TableHead>
-                                    <TableHead>Documento</TableHead>
-                                    <TableHead>Direccion</TableHead>
-                                    <TableHead>Telefono</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                <TableRow>
-                                    <TableCell>Juan Perez</TableCell>
-                                    <TableCell>1234567890</TableCell>
-                                    <TableCell>Av. Siempre Viva 123</TableCell>
-                                    <TableCell>1234567890</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell>Juan Perez</TableCell>
-                                    <TableCell>1234567890</TableCell>
-                                    <TableCell>Av. Siempre Viva 123</TableCell>
-                                    <TableCell>1234567890</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
+                        <p className="font-medium">Clientes nuevos: {clientesNuevosState.length}</p>
+                        {clientesNuevosState.length > 0 && (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Nombre</TableHead>
+                                        <TableHead>Documento</TableHead>
+                                        <TableHead>Direccion</TableHead>
+                                        <TableHead>Telefono</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {clientesNuevosState.map((cliente) => (
+                                        <TableRow key={cliente.id}>
+                                            <TableCell>{cliente.nombre}</TableCell>
+                                            <TableCell>{cliente.documento}</TableCell>
+                                            <TableCell>{cliente.direccion}</TableCell>
+                                            <TableCell>{cliente.telefono}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        )}
                     </div>
                 </div>
 

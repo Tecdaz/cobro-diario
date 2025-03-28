@@ -206,6 +206,27 @@ export async function clientesHoy(user, carteraId) {
     return count
 }
 
+export async function clientesNuevos(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('cliente')
+        .select(`
+            nombre,
+            telefono,
+            direccion,
+            documento
+            `)
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .eq('cobrador', user.id)
+        .eq('id_cartera', carteraId)
+
+    if (error) throw error
+    return data
+}
+
 export async function getClients(user, carteraId) {
     const { data, error } = await supabase
         .from('cliente')
