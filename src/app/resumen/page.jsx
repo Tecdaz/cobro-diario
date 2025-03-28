@@ -4,6 +4,8 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getResumenDiario, getCajaInicial, totalClientes, clientesHoy } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Resumen() {
     const { handleTitleChange } = useLayout();
@@ -69,7 +71,7 @@ export default function Resumen() {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-gray-50 p-4 gap-4">
+        <div className="flex flex-col bg-gray-50 p-4 gap-4">
             {/* Fecha */}
             <div className="text-sm text-gray-500 text-center">
                 {new Date().toLocaleDateString('es-ES', {
@@ -164,6 +166,12 @@ export default function Resumen() {
                     </div>
                 </div>
             </div>
+
+            <Button variant="outline">
+                <Link href="/vista_resumen">
+                    Vista detallada
+                </Link>
+            </Button>
         </div>
     );
 }
