@@ -1,3 +1,5 @@
+'use client'
+
 import {
     Table,
     TableBody,
@@ -9,10 +11,35 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-
+import { useAuth } from "@/contexts/AuthContext"
+import { useLayout } from '@/contexts/LayoutContext'
+import { useEffect, useState } from 'react'
 export default function VistaResumen() {
+    const { user, cartera } = useAuth()
+    const { handleTitleChange } = useLayout()
+    const [isLoading, setIsLoading] = useState(true)
+    const [error, setError] = useState(null)
+
+    useEffect(() => {
+        handleTitleChange("Vista Resumen")
+    }, [])
+
+    useEffect(() => {
+        if (user && cartera) {
+            setIsLoading(false)
+        }
+    }, [user, cartera])
+
+    if (isLoading) {
+        return <div>Cargando...</div>
+    }
+
+    if (error) {
+        return <div>Error: {error}</div>
+    }
+
     return (
-        <div className="flex flex-col items-center justify-center gap-8 px-4 py-8 bg-gray-100">
+        <div id="resumen" className="flex flex-col items-center justify-center gap-8 px-4 py-8 bg-gray-100">
             <h1 className="text-2xl font-bold text-center mb-6">Agustin Arias - Tandil1 - 28/03/2025</h1>
             <div className="flex flex-col items-center justify-center gap-8 w-full max-w-5xl">
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
