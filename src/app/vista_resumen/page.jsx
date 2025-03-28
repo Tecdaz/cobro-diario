@@ -136,6 +136,12 @@ export default function VistaResumen() {
         setMovimientosDelDia(movimientos)
     }
 
+    const calculateInteres = (venta) => {
+        const interes = (venta.valor_cuota * venta.cuotas) / venta.precio
+
+        return Math.round((interes - 1) * 100)
+    }
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -241,57 +247,66 @@ export default function VistaResumen() {
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Ventas</h2>
                     <div className="w-full">
                         <p className="font-medium mb-4">Total de ventas: {ventasDelDia.length}</p>
+                        {ventasDelDia.length > 0 && (
+                            <>
 
-                        <p className="font-medium mb-4">Ventas nuevas: {ventasNuevasDelDia.length}</p>
-                        {ventasNuevasDelDia.length > 0 && (
-                            <Table className="w-full max-w-full mb-6">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nombre</TableHead>
-                                        <TableHead>Monto</TableHead>
-                                        <TableHead>Frecuencia</TableHead>
-                                        <TableHead>Cuotas</TableHead>
-                                        <TableHead>Valor Cuota</TableHead>
-                                        <TableHead>Interes</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell>Juan Perez</TableCell>
-                                        <TableCell>100000</TableCell>
-                                        <TableCell>Semanal</TableCell>
-                                        <TableCell>4</TableCell>
-                                        <TableCell>80000</TableCell>
-                                        <TableCell>10%</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
-                        )}
 
-                        <p className="font-medium mb-4">Renovaciones: {renovacionesDelDia.length}</p>
-                        {renovacionesDelDia.length > 0 && (
-                            <Table className="w-full overflow-x-auto">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Nombre</TableHead>
-                                        <TableHead>Monto</TableHead>
-                                        <TableHead>Frecuencia</TableHead>
-                                        <TableHead>Cuotas</TableHead>
-                                        <TableHead>Valor Cuota</TableHead>
-                                        <TableHead>Interes</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    <TableRow>
-                                        <TableCell>Juan Perez</TableCell>
-                                        <TableCell>100000</TableCell>
-                                        <TableCell>Semanal</TableCell>
-                                        <TableCell>4</TableCell>
-                                        <TableCell>80000</TableCell>
-                                        <TableCell>10%</TableCell>
-                                    </TableRow>
-                                </TableBody>
-                            </Table>
+                                <p className="font-medium mb-4">Ventas nuevas: {ventasNuevasDelDia.length}</p>
+                                {ventasNuevasDelDia.length > 0 && (
+                                    <Table className="w-full max-w-full mb-6">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Nombre</TableHead>
+                                                <TableHead>Monto</TableHead>
+                                                <TableHead>Frecuencia</TableHead>
+                                                <TableHead>Cuotas</TableHead>
+                                                <TableHead>Valor Cuota</TableHead>
+                                                <TableHead>Interes</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {ventasNuevasDelDia.map((venta) => (
+                                                <TableRow key={venta.id}>
+                                                    <TableCell>{venta.cliente.nombre}</TableCell>
+                                                    <TableCell>{venta.precio}</TableCell>
+                                                    <TableCell>{venta.frecuencia}</TableCell>
+                                                    <TableCell>{venta.cuotas}</TableCell>
+                                                    <TableCell>{venta.valor_cuota}</TableCell>
+                                                    <TableCell>{calculateInteres(venta)}%</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+
+                                <p className="font-medium mb-4">Renovaciones: {renovacionesDelDia.length}</p>
+                                {renovacionesDelDia.length > 0 && (
+                                    <Table className="w-full overflow-x-auto">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Nombre</TableHead>
+                                                <TableHead>Monto</TableHead>
+                                                <TableHead>Frecuencia</TableHead>
+                                                <TableHead>Cuotas</TableHead>
+                                                <TableHead>Valor Cuota</TableHead>
+                                                <TableHead>Interes</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {renovacionesDelDia.map((renovacion) => (
+                                                <TableRow key={renovacion.id}>
+                                                    <TableCell>{renovacion.cliente.nombre}</TableCell>
+                                                    <TableCell>{renovacion.precio}</TableCell>
+                                                    <TableCell>{renovacion.frecuencia}</TableCell>
+                                                    <TableCell>{renovacion.cuotas}</TableCell>
+                                                    <TableCell>{renovacion.valor_cuota}</TableCell>
+                                                    <TableCell>{calculateInteres(renovacion)}%</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -299,18 +314,18 @@ export default function VistaResumen() {
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Cobros</h2>
                     <div className="w-full">
-                        <div className="flex gap-4  mb-4">
-                            <p className="font-medium flex-1">Cobros pretendidos: {pretendidosDelDia.length}</p>
-                            <p className="font-medium flex-1">Dinero pretendido: {formatCurrency(dineroPretendido)}</p>
-                        </div>
-                        <p className="font-medium mb-2">Cobros realizados</p>
+
+                        <p className="font-medium mb-2">Cobros pretendidos: {pretendidosDelDia.length}</p>
+                        <p className="font-medium mb-2">Dinero pretendido: {formatCurrency(dineroPretendido)}</p>
+
+                        <p className="font-medium  mb-2">Cobros realizados</p>
                         <div className="grid grid-cols-2 gap-4 mb-4">
                             <p className="font-medium">De hoy: {cobrosHoy}</p>
                             <p className="font-medium">Otras fechas: {cobrosOtrasFechas}</p>
                             <p className="font-medium">No pago: {cobrosNoPago.length}</p>
                             <p className="font-medium">Siguiente dia: {cobrosSiguienteDia.length}</p>
                         </div>
-                        <p className="font-medium">Dinero cobrado: {formatCurrency(dineroCobrado)}</p>
+                        <p className="font-medium">Dinero cobrado: <span className={dineroCobrado > dineroPretendido ? 'text-green-500' : 'text-orange-500'}>{formatCurrency(dineroCobrado)}</span></p>
                     </div>
                 </div>
 
@@ -318,48 +333,52 @@ export default function VistaResumen() {
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Gastos Ingresos</h2>
                     <div className="w-full">
                         <p className="font-medium mb-4">Movimientos del dia: {formatCurrency(movimientosDelDia)}</p>
+                        {movimientosDelDia > 0 && (
+                            <>
 
-                        <p className="font-medium mb-4">Ingresos: {formatCurrency(totalIngresosDelDia)}</p>
-                        {ingresosDelDia.length > 0 && (
-                            <Table className="mb-6">
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Concepto</TableHead>
-                                        <TableHead>Monto</TableHead>
-                                        <TableHead>Observacion</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {ingresosDelDia.map((ingreso) => (
-                                        <TableRow key={ingreso.id}>
-                                            <TableCell>{ingreso.descripcion}</TableCell>
-                                            <TableCell>{formatCurrency(ingreso.valor)}</TableCell>
-                                            <TableCell>{ingreso.observacion}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        )}
-                        <p className="font-medium mb-4">Gastos: {formatCurrency(totalGastosDelDia)}</p>
-                        {gastosDelDia.length > 0 && (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Concepto</TableHead>
-                                        <TableHead>Monto</TableHead>
-                                        <TableHead>Observacion</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {gastosDelDia.map((gasto) => (
-                                        <TableRow key={gasto.id}>
-                                            <TableCell>{gasto.descripcion}</TableCell>
-                                            <TableCell>{formatCurrency(gasto.valor)}</TableCell>
-                                            <TableCell>{gasto.observacion}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
+                                <p className="font-medium mb-4">Ingresos: {formatCurrency(totalIngresosDelDia)}</p>
+                                {ingresosDelDia.length > 0 && (
+                                    <Table className="mb-6">
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Concepto</TableHead>
+                                                <TableHead>Monto</TableHead>
+                                                <TableHead>Observacion</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {ingresosDelDia.map((ingreso) => (
+                                                <TableRow key={ingreso.id}>
+                                                    <TableCell>{ingreso.descripcion}</TableCell>
+                                                    <TableCell>{formatCurrency(ingreso.valor)}</TableCell>
+                                                    <TableCell>{ingreso.observacion}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                                <p className="font-medium mb-4">Gastos: {formatCurrency(totalGastosDelDia)}</p>
+                                {gastosDelDia.length > 0 && (
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>Concepto</TableHead>
+                                                <TableHead>Monto</TableHead>
+                                                <TableHead>Observacion</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {gastosDelDia.map((gasto) => (
+                                                <TableRow key={gasto.id}>
+                                                    <TableCell>{gasto.descripcion}</TableCell>
+                                                    <TableCell>{formatCurrency(gasto.valor)}</TableCell>
+                                                    <TableCell>{gasto.observacion}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                )}
+                            </>
                         )}
                     </div>
                 </div>
@@ -399,8 +418,8 @@ export default function VistaResumen() {
                         </Table>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 
