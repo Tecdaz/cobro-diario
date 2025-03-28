@@ -25,7 +25,8 @@ import {
     getCuotasDelDia,
     getNoPagosDelDia,
     getSiguienteDiaDelDia,
-    getGastosIngresosDelDia
+    getGastosIngresosDelDia,
+    getCajaInicial
 } from "@/lib/db"
 import { getStartOfTheDay, getEndOfTheDay } from "@/lib/utils"
 
@@ -55,11 +56,18 @@ export default function VistaResumen() {
     const [totalGastosDelDia, setTotalGastosDelDia] = useState(0)
     const [totalIngresosDelDia, setTotalIngresosDelDia] = useState(0)
     const [movimientosDelDia, setMovimientosDelDia] = useState([])
+    const [cajaInicial, setCajaInicial] = useState(0)
+    const [totalVentasDelDia, setTotalVentasDelDia] = useState(0)
 
 
     useEffect(() => {
         handleTitleChange("Vista Resumen")
     }, [])
+
+    const calculateTotalVentasDelDia = (ventas) => {
+        const totalVentas = ventas.reduce((acc, venta) => acc + venta.precio, 0)
+        setTotalVentasDelDia(totalVentas * -1)
+    }
 
     const calculateCobros = (abonos, cuotas, pretendidos) => {
         const idsTotalCobros = [...abonos.filter(abono => abono.valor > 0).map(abono => abono.venta_id), ...cuotas.map(cuota => cuota.venta_id)]
@@ -79,6 +87,14 @@ export default function VistaResumen() {
 
         setCobrosHoy(cobrosHoyCount)
         setCobrosOtrasFechas(cobrosOtrasFechasCount)
+    }
+
+    const formatCurrency = (value) => {
+        return new Intl.NumberFormat('es-AR', {
+            style: 'currency',
+            currency: 'ARS',
+            minimumFractionDigits: 0
+        }).format(value);
     }
 
 
@@ -132,18 +148,21 @@ export default function VistaResumen() {
                     cuotasDelDiaData,
                     noPagosDelDiaData,
                     siguienteDiaDelDiaData,
-                    gastosIngresosDelDiaData] = await Promise.all([
-                        totalClientes(user, cartera.id_cartera),
-                        clientesNuevos(user, cartera.id_cartera),
-                        getNombreCobrador(user),
-                        getVentasDelDia(user, cartera.id_cartera),
-                        getPretendidosDelDia(user, cartera.id_cartera),
-                        getAbonosDelDia(user, cartera.id_cartera),
-                        getCuotasDelDia(user, cartera.id_cartera),
-                        getNoPagosDelDia(user, cartera.id_cartera),
-                        getSiguienteDiaDelDia(user, cartera.id_cartera),
-                        getGastosIngresosDelDia(user, cartera.id_cartera)
-                    ])
+                    gastosIngresosDelDiaData,
+                    cajaInicialData
+                ] = await Promise.all([
+                    totalClientes(user, cartera.id_cartera),
+                    clientesNuevos(user, cartera.id_cartera),
+                    getNombreCobrador(user),
+                    getVentasDelDia(user, cartera.id_cartera),
+                    getPretendidosDelDia(user, cartera.id_cartera),
+                    getAbonosDelDia(user, cartera.id_cartera),
+                    getCuotasDelDia(user, cartera.id_cartera),
+                    getNoPagosDelDia(user, cartera.id_cartera),
+                    getSiguienteDiaDelDia(user, cartera.id_cartera),
+                    getGastosIngresosDelDia(user, cartera.id_cartera),
+                    getCajaInicial(user, cartera.id_cartera)
+                ])
                 setTotalClientesState(totalClientesData)
                 setClientesNuevosState(clientesNuevosData)
                 setNombreCobrador(nombreCobradorData)
@@ -154,8 +173,9 @@ export default function VistaResumen() {
                 setCobrosNoPago(noPagosDelDiaData)
                 setCobrosSiguienteDia(siguienteDiaDelDiaData)
                 setGastosIngresosDelDia(gastosIngresosDelDiaData)
+                setCajaInicial(cajaInicialData)
 
-
+                calculateTotalVentasDelDia(ventasDelDiaData)
                 categorizeGastosIngresos(gastosIngresosDelDiaData)
                 calculateDineroPretendido(pretendidosDelDiaData)
                 calculateDineroCobrado(abonosDelDiaData, cuotasDelDiaData)
@@ -281,7 +301,7 @@ export default function VistaResumen() {
                     <div className="w-full">
                         <div className="flex gap-4  mb-4">
                             <p className="font-medium flex-1">Cobros pretendidos: {pretendidosDelDia.length}</p>
-                            <p className="font-medium flex-1">Dinero pretendido: {dineroPretendido}</p>
+                            <p className="font-medium flex-1">Dinero pretendido: {formatCurrency(dineroPretendido)}</p>
                         </div>
                         <p className="font-medium mb-2">Cobros realizados</p>
                         <div className="grid grid-cols-2 gap-4 mb-4">
@@ -290,16 +310,16 @@ export default function VistaResumen() {
                             <p className="font-medium">No pago: {cobrosNoPago.length}</p>
                             <p className="font-medium">Siguiente dia: {cobrosSiguienteDia.length}</p>
                         </div>
-                        <p className="font-medium">Dinero cobrado: {dineroCobrado}</p>
+                        <p className="font-medium">Dinero cobrado: {formatCurrency(dineroCobrado)}</p>
                     </div>
                 </div>
 
                 <div className="w-full bg-white rounded-lg shadow-md p-6">
                     <h2 className="text-xl font-bold mb-4 border-b pb-2">Gastos Ingresos</h2>
                     <div className="w-full">
-                        <p className="font-medium mb-4">Movimientos del dia: {movimientosDelDia}</p>
+                        <p className="font-medium mb-4">Movimientos del dia: {formatCurrency(movimientosDelDia)}</p>
 
-                        <p className="font-medium">Ingresos: {totalIngresosDelDia}</p>
+                        <p className="font-medium">Ingresos: {formatCurrency(totalIngresosDelDia)}</p>
                         {ingresosDelDia.length > 0 && (
                             <Table className="mb-6">
                                 <TableHeader>
@@ -310,15 +330,17 @@ export default function VistaResumen() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow>
-                                        <TableCell>Aporte capital</TableCell>
-                                        <TableCell>10000</TableCell>
-                                        <TableCell></TableCell>
-                                    </TableRow>
+                                    {ingresosDelDia.map((ingreso) => (
+                                        <TableRow key={ingreso.id}>
+                                            <TableCell>{ingreso.descripcion}</TableCell>
+                                            <TableCell>{formatCurrency(ingreso.valor)}</TableCell>
+                                            <TableCell>{ingreso.observacion}</TableCell>
+                                        </TableRow>
+                                    ))}
                                 </TableBody>
                             </Table>
                         )}
-                        <p className="font-medium mb-4">Gastos: {totalGastosDelDia}</p>
+                        <p className="font-medium mb-4">Gastos: {formatCurrency(totalGastosDelDia)}</p>
                         {gastosDelDia.length > 0 && (
                             <Table>
                                 <TableHeader>
@@ -329,11 +351,13 @@ export default function VistaResumen() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    <TableRow>
-                                        <TableCell>Gasolina</TableCell>
-                                        <TableCell>20000</TableCell>
-                                        <TableCell></TableCell>
-                                    </TableRow>
+                                    {gastosDelDia.map((gasto) => (
+                                        <TableRow key={gasto.id}>
+                                            <TableCell>{gasto.descripcion}</TableCell>
+                                            <TableCell>{formatCurrency(gasto.valor)}</TableCell>
+                                            <TableCell>{gasto.observacion}</TableCell>
+                                        </TableRow>
+                                    ))}
                                 </TableBody>
                             </Table>
                         )}
@@ -347,29 +371,29 @@ export default function VistaResumen() {
                             <TableBody>
                                 <TableRow>
                                     <TableCell>Caja inicial</TableCell>
-                                    <TableCell>100000</TableCell>
+                                    <TableCell>{formatCurrency(cajaInicial)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Ventas</TableCell>
-                                    <TableCell>-300000</TableCell>
+                                    <TableCell>{formatCurrency(totalVentasDelDia)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Cobro</TableCell>
-                                    <TableCell>400000</TableCell>
+                                    <TableCell>{formatCurrency(dineroCobrado)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Gastos</TableCell>
-                                    <TableCell>-100000</TableCell>
+                                    <TableCell>{formatCurrency(totalGastosDelDia)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell>Ingresos</TableCell>
-                                    <TableCell>10000</TableCell>
+                                    <TableCell>{formatCurrency(totalIngresosDelDia)}</TableCell>
                                 </TableRow>
                             </TableBody>
                             <TableFooter>
                                 <TableRow>
                                     <TableCell>Caja final</TableCell>
-                                    <TableCell>300000</TableCell>
+                                    <TableCell>{formatCurrency(cajaInicial + totalVentasDelDia + dineroCobrado - totalGastosDelDia + totalIngresosDelDia)}</TableCell>
                                 </TableRow>
                             </TableFooter>
                         </Table>
