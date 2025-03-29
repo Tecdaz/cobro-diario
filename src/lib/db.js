@@ -213,6 +213,7 @@ export async function clientesNuevos(user, carteraId) {
     const { data, error } = await supabase
         .from('cliente')
         .select(`
+            id,
             nombre,
             telefono,
             direccion,

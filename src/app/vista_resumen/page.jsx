@@ -230,7 +230,7 @@ export default function VistaResumen() {
                                 </TableHeader>
                                 <TableBody>
                                     {clientesNuevosState.map((cliente) => (
-                                        <TableRow key={cliente.id}>
+                                        <TableRow key={`cliente-${cliente.id}`}>
                                             <TableCell>{cliente.nombre}</TableCell>
                                             <TableCell>{cliente.documento}</TableCell>
                                             <TableCell>{cliente.direccion}</TableCell>
@@ -266,7 +266,7 @@ export default function VistaResumen() {
                                         </TableHeader>
                                         <TableBody>
                                             {ventasNuevasDelDia.map((venta) => (
-                                                <TableRow key={venta.id}>
+                                                <TableRow key={`venta-nueva-${venta.id}`}>
                                                     <TableCell>{venta.cliente.nombre}</TableCell>
                                                     <TableCell>{venta.precio}</TableCell>
                                                     <TableCell>{venta.frecuencia}</TableCell>
@@ -294,7 +294,7 @@ export default function VistaResumen() {
                                         </TableHeader>
                                         <TableBody>
                                             {renovacionesDelDia.map((renovacion) => (
-                                                <TableRow key={renovacion.id}>
+                                                <TableRow key={`renovacion-${renovacion.id}`}>
                                                     <TableCell>{renovacion.cliente.nombre}</TableCell>
                                                     <TableCell>{renovacion.precio}</TableCell>
                                                     <TableCell>{renovacion.frecuencia}</TableCell>
@@ -348,7 +348,7 @@ export default function VistaResumen() {
                                         </TableHeader>
                                         <TableBody>
                                             {ingresosDelDia.map((ingreso) => (
-                                                <TableRow key={ingreso.id}>
+                                                <TableRow key={`ingreso-${ingreso.id}`}>
                                                     <TableCell>{ingreso.descripcion}</TableCell>
                                                     <TableCell>{formatCurrency(ingreso.valor)}</TableCell>
                                                     <TableCell>{ingreso.observacion}</TableCell>
@@ -369,7 +369,7 @@ export default function VistaResumen() {
                                         </TableHeader>
                                         <TableBody>
                                             {gastosDelDia.map((gasto) => (
-                                                <TableRow key={gasto.id}>
+                                                <TableRow key={`gasto-${gasto.id}`}>
                                                     <TableCell>{gasto.descripcion}</TableCell>
                                                     <TableCell>{formatCurrency(gasto.valor)}</TableCell>
                                                     <TableCell>{gasto.observacion}</TableCell>
