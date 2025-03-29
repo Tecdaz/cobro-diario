@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getVentasOtrasFechas } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
 import { X, ArrowUpDown } from "lucide-react";
+import { buscarEnCampos } from "@/lib/utils";
 
 export default function VentasOtraFecha() {
     const { handleTitleChange } = useLayout();
@@ -19,15 +20,7 @@ export default function VentasOtraFecha() {
 
     const handleSearch = (term) => {
         setSearchTerm(term);
-        if (!term.trim()) {
-            setFilteredData(data);
-            return;
-        }
-
-        const searchTermLower = term.toLowerCase();
-        const filtered = data.filter(venta =>
-            venta.nombre?.toLowerCase().includes(searchTermLower)
-        );
+        const filtered = buscarEnCampos(data, term, ['nombre', 'direccion']);
         setFilteredData(filtered);
     }
 
@@ -86,10 +79,7 @@ export default function VentasOtraFecha() {
 
         // Aplicar filtro de búsqueda
         if (searchTerm.trim()) {
-            const searchTermLower = searchTerm.toLowerCase();
-            filtered = filtered.filter(venta =>
-                venta.nombre?.toLowerCase().includes(searchTermLower)
-            );
+            filtered = buscarEnCampos(filtered, searchTerm, ['nombre', 'direccion']);
         }
 
         // Aplicar filtro de frecuencia

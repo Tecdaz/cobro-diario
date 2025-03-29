@@ -6,6 +6,7 @@ import { getClients } from '@/lib/db';
 import ClientCard from '@/components/ClientCard';
 import SearchBar from '@/components/SearchBar';
 import { useAuth } from '@/contexts/AuthContext';
+import { buscarEnCampos } from '@/lib/utils';
 
 export default function Clientes() {
     const { handleTitleChange } = useLayout();
@@ -38,18 +39,7 @@ export default function Clientes() {
 
     const handleSearch = (searchValue) => {
         setSearchTerm(searchValue);
-        if (!searchValue.trim()) {
-            setFilteredClients(clients);
-            return;
-        }
-
-        const filtered = clients.filter(client =>
-            client.nombre.toLowerCase().includes(searchValue.toLowerCase()) ||
-            client.telefono.includes(searchValue) ||
-            client.direccion.toLowerCase().includes(searchValue.toLowerCase()) ||
-            client.documento.includes(searchValue)
-        );
-        console.log(filtered);
+        const filtered = buscarEnCampos(clients, searchValue, ['nombre', 'telefono', 'direccion', 'documento']);
         setFilteredClients(filtered);
     };
 

@@ -5,6 +5,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getTodayCobros, getTodayPayments, getCart } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
+import { buscarEnCampos } from "@/lib/utils";
 
 export default function Dashboard() {
     const { handleTitleChange } = useLayout();
@@ -21,16 +22,7 @@ export default function Dashboard() {
 
     const handleSearch = (term) => {
         setSearchTerm(term);
-        if (!term.trim()) {
-            setFilteredData(data);
-            return;
-        }
-
-        const searchTermLower = term.toLowerCase();
-        const filtered = data.filter(venta =>
-            venta.nombre?.toLowerCase().includes(searchTermLower) ||
-            venta.direccion?.toLowerCase().includes(searchTermLower)
-        );
+        const filtered = buscarEnCampos(data, term, ['nombre', 'direccion']);
         setFilteredData(filtered);
     }
 

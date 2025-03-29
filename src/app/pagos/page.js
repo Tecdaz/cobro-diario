@@ -7,6 +7,7 @@ import { supabase } from "@/lib/db";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowUpDown, Search, List, X } from "lucide-react";
 import { getTodayPayments, getTodasVentas } from "@/lib/db";
+import { buscarEnCampos } from "@/lib/utils";
 
 export default function Pagos() {
     const router = useRouter();
@@ -112,11 +113,7 @@ export default function Pagos() {
 
     const ventasFiltradas = ventas.filter(venta => {
         // Filtro por texto de búsqueda
-        const coincideTexto =
-            venta.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-            venta.documento.toLowerCase().includes(busqueda.toLowerCase()) ||
-            venta.producto.toLowerCase().includes(busqueda.toLowerCase()) ||
-            venta.direccion.toLowerCase().includes(busqueda.toLowerCase());
+        const coincideTexto = buscarEnCampos([venta], busqueda, ['nombre', 'documento', 'producto', 'direccion']).length > 0;
 
         // Filtro por frecuencia
         const coincideFrecuencia = filtroFrecuencia === "" || venta.frecuencia === filtroFrecuencia;
