@@ -460,7 +460,7 @@ export default function VistaResumen() {
                     </div>
                 </div>
             </div >
-            <Button onClick={handleSubmitReport}>Guardar resumen</Button>
+            <Button className="w-full bg-red-500" onClick={handleSubmitReport}>Cerrar sistema</Button>
 
             <ConfirmacionResumenModal
                 isOpen={showConfirmModal}
