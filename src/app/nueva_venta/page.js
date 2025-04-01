@@ -230,9 +230,6 @@ export default function NuevaVenta() {
                 throw new Error("No se pudo registrar la venta. Por favor, verifique los datos e intente nuevamente.");
             }
 
-
-
-
             // Esperar un segundo antes de redireccionar para que el usuario vea el mensaje de éxito
             setTimeout(() => {
                 // Redireccionar al inicio
@@ -248,7 +245,6 @@ export default function NuevaVenta() {
     }
 
     return (
-
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col p-4 gap-2">
             {error && (
                 <Alert variant="destructive" className="mb-4">
@@ -367,10 +363,17 @@ export default function NuevaVenta() {
 
             <button
                 type="submit"
-                className="bg-blue-500 text-white p-2 rounded-md mt-2 disabled:bg-blue-300 disabled:cursor-not-allowed"
+                className="bg-blue-500 text-white p-2 rounded-md mt-2 disabled:bg-blue-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 disabled={isSubmitting}
             >
-                {isSubmitting ? 'Procesando...' : 'Registrar venta'}
+                {isSubmitting ? (
+                    <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Procesando...
+                    </>
+                ) : (
+                    'Registrar venta'
+                )}
             </button>
         </form>
     );

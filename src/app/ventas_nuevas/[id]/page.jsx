@@ -242,7 +242,7 @@ export default function EditarVenta() {
                     <button
                         type="button"
                         onClick={() => router.back()}
-                        className="flex-1 p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                        className="flex-1 p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         disabled={isSubmitting || isDeleting}
                     >
                         Cancelar
@@ -250,17 +250,31 @@ export default function EditarVenta() {
                     <button
                         type="button"
                         onClick={handleDelete}
-                        className="flex-1 p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:bg-red-300"
+                        className="flex-1 p-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:bg-red-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         disabled={isSubmitting || isDeleting}
                     >
-                        {isDeleting ? 'Eliminando...' : 'Eliminar Venta'}
+                        {isDeleting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Eliminando...
+                            </>
+                        ) : (
+                            'Eliminar Venta'
+                        )}
                     </button>
                     <button
                         type="submit"
-                        className="flex-1 p-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors disabled:bg-orange-300"
+                        className="flex-1 p-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         disabled={isSubmitting || isDeleting}
                     >
-                        {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                        {isSubmitting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Procesando...
+                            </>
+                        ) : (
+                            'Guardar Cambios'
+                        )}
                     </button>
                 </div>
             </form>

@@ -167,11 +167,13 @@ export default function Resumen() {
                 </div>
             </div>
 
-            <Button variant="outline">
-                <Link href="/vista_resumen">
+            <Link href="/vista_resumen">
+                <Button variant="outline" className="w-full">
                     Vista detallada
-                </Link>
-            </Button>
+                </Button>
+            </Link>
+
+
         </div>
     );
 }

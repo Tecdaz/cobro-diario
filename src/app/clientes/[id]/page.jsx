@@ -131,10 +131,17 @@ export default function EditarCliente() {
                     </button>
                     <button
                         type="submit"
-                        className="flex-1 p-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors disabled:bg-orange-300"
+                        className="flex-1 p-2 bg-orange-500 text-white rounded-md hover:bg-orange-600 transition-colors disabled:bg-orange-300 flex items-center justify-center gap-2"
                         disabled={isSubmitting}
                     >
-                        {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                        {isSubmitting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Procesando...
+                            </>
+                        ) : (
+                            'Guardar Cambios'
+                        )}
                     </button>
                 </div>
             </form>

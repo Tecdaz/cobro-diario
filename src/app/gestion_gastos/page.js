@@ -19,6 +19,10 @@ import {
 export default function GestionGastos() {
     const { handleTitleChange } = useLayout();
     const { user, cartera } = useAuth();
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState(null);
+    const [mensaje, setMensaje] = useState(null);
+
     useEffect(() => {
         handleTitleChange("Gestion de caja")
     }, [handleTitleChange])
@@ -37,6 +41,10 @@ export default function GestionGastos() {
     }
 
     const onSubmit = async (data) => {
+        setIsSubmitting(true);
+        setError(null);
+        setMensaje("Registrando gasto...");
+
         try {
             if (user && cartera.id_cartera) {
                 data = {
@@ -45,24 +53,60 @@ export default function GestionGastos() {
                     id_cartera: cartera.id_cartera
                 }
                 if (!data.valor || !data.descripcion) {
+                    setError("Por favor complete todos los campos requeridos");
+                    setIsSubmitting(false);
                     return;
                 }
                 await createGasto(data);
+                setMensaje("¡Gasto registrado correctamente! Redirigiendo...");
                 router.push('/');
             }
         }
         catch (error) {
             console.error("Error al crear gasto:", error);
-            toast.error("Error al crear gasto");
+            setError("Error al registrar el gasto. Por favor intente nuevamente.");
+            setMensaje(null);
+        } finally {
+            setIsSubmitting(false);
         }
     }
     return (
         <div className="flex flex-col gap-4 p-4">
+            {error && (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {error}
+                </div>
+            )}
+
+            {mensaje && !error && (
+                <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    {mensaje}
+                </div>
+            )}
 
             <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)}>
                 <div className="flex gap-4 w-full justify-between">
-                    <Button variant="outline" onClick={handleCancel}>Cancelar</Button>
-                    <Button type="submit">Guardar</Button>
+                    <Button
+                        variant="outline"
+                        onClick={handleCancel}
+                        disabled={isSubmitting}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex items-center justify-center gap-2"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                Procesando...
+                            </>
+                        ) : (
+                            'Guardar'
+                        )}
+                    </Button>
                 </div>
                 <div className="flex gap-4">
                     <InputRadio register={register} name="tipo" value="gasto" label="Gasto" />
