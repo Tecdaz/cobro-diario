@@ -31,12 +31,14 @@ import {
 } from "@/lib/db"
 import { getStartOfTheDay, getEndOfTheDay } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import ConfirmacionResumenModal from "@/components/ConfirmacionResumenModal"
 
 export default function VistaResumen() {
     const { user, cartera } = useAuth()
     const { handleTitleChange } = useLayout()
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(null)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [totalClientesState, setTotalClientesState] = useState(0)
     const [clientesNuevosState, setClientesNuevosState] = useState([])
     const [nombreCobrador, setNombreCobrador] = useState('')
@@ -146,8 +148,11 @@ export default function VistaResumen() {
         return Math.round((interes - 1) * 100)
     }
 
-    const handleSubmitReport = async () => {
+    const handleSubmitReport = () => {
+        setShowConfirmModal(true)
+    }
 
+    const handleConfirmSubmit = async () => {
         const report = {
             id_cobrador: user.id,
             id_cartera: cartera.id_cartera,
@@ -168,8 +173,6 @@ export default function VistaResumen() {
             caja_final: cajaInicial + totalVentasDelDia + dineroCobrado - totalGastosDelDia + totalIngresosDelDia
         }
 
-        console.log({ report })
-
         try {
             const response = await submitReport(report)
             console.log(response)
@@ -178,7 +181,6 @@ export default function VistaResumen() {
         } catch (error) {
             console.error(error)
         }
-
     }
 
     useEffect(() => {
@@ -459,6 +461,12 @@ export default function VistaResumen() {
                 </div>
             </div >
             <Button onClick={handleSubmitReport}>Guardar resumen</Button>
+
+            <ConfirmacionResumenModal
+                isOpen={showConfirmModal}
+                onConfirm={handleConfirmSubmit}
+                onCancel={() => setShowConfirmModal(false)}
+            />
         </div >
     );
 }
