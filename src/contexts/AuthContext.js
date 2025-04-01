@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { getCartera, supabase } from '@/lib/db'
+import { getCartera, supabase, checkReporteDelDia } from '@/lib/db'
 
 // Crear el contexto de autenticación
 const AuthContext = createContext()
@@ -17,6 +17,7 @@ export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [loading, setLoading] = useState(true)
     const [carteraLoading, setCarteraLoading] = useState(false)
+    const [canNavigate, setCanNavigate] = useState(false)
     const router = useRouter()
     const [cartera, setCartera] = useState({
         id_cartera: null,
@@ -24,6 +25,32 @@ export function AuthProvider({ children }) {
             nombre: null
         }
     })
+
+    // Efecto para verificar el reporte cuando cambia el usuario o la cartera
+    useEffect(() => {
+        async function verificarReporte() {
+            if (!user || !cartera.id_cartera) {
+                setCanNavigate(false)
+                return
+            }
+
+            try {
+                const existeReporte = await checkReporteDelDia(user, cartera.id_cartera)
+                if (existeReporte) {
+                    console.log('[AuthContext] Usuario tiene reporte del día, cerrando sesión')
+                    await supabase.auth.signOut()
+                    setCanNavigate(false)
+                } else {
+                    setCanNavigate(true)
+                }
+            } catch (error) {
+                console.error('[AuthContext] Error al verificar reporte:', error)
+                setCanNavigate(false)
+            }
+        }
+
+        verificarReporte()
+    }, [user, cartera.id_cartera])
 
     // Efecto para cargar la cartera cuando cambia el usuario
     useEffect(() => {
@@ -126,7 +153,8 @@ export function AuthProvider({ children }) {
         signOut,
         isAuthenticated: !!user,
         cartera,
-        setCartera
+        setCartera,
+        canNavigate
     }
 
     return (

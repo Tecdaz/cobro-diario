@@ -26,9 +26,11 @@ import {
     getNoPagosDelDia,
     getSiguienteDiaDelDia,
     getGastosIngresosDelDia,
-    getCajaInicial
+    getCajaInicial,
+    submitReport
 } from "@/lib/db"
 import { getStartOfTheDay, getEndOfTheDay } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
 export default function VistaResumen() {
     const { user, cartera } = useAuth()
@@ -58,6 +60,8 @@ export default function VistaResumen() {
     const [movimientosDelDia, setMovimientosDelDia] = useState([])
     const [cajaInicial, setCajaInicial] = useState(0)
     const [totalVentasDelDia, setTotalVentasDelDia] = useState(0)
+
+    const { signOut } = useAuth()
 
 
     useEffect(() => {
@@ -140,6 +144,41 @@ export default function VistaResumen() {
         const interes = (venta.valor_cuota * venta.cuotas) / venta.precio
 
         return Math.round((interes - 1) * 100)
+    }
+
+    const handleSubmitReport = async () => {
+
+        const report = {
+            id_cobrador: user.id,
+            id_cartera: cartera.id_cartera,
+            clientes_nuevos: clientesNuevosState.length,
+            clientes: clientesNuevosState,
+            ventas: ventasDelDia.length,
+            ventas_nuevas: ventasNuevasDelDia,
+            renovaciones: renovacionesDelDia,
+            pretendido: dineroPretendido,
+            recaudado: dineroCobrado,
+            de_hoy: cobrosHoy,
+            de_otra_fecha: cobrosOtrasFechas,
+            no_pago: cobrosNoPago.length,
+            siguiente_dia: cobrosSiguienteDia.length,
+            gastos: gastosDelDia,
+            ingresos: ingresosDelDia,
+            caja_inicial: cajaInicial,
+            caja_final: cajaInicial + totalVentasDelDia + dineroCobrado - totalGastosDelDia + totalIngresosDelDia
+        }
+
+        console.log({ report })
+
+        try {
+            const response = await submitReport(report)
+            console.log(response)
+
+            await signOut()
+        } catch (error) {
+            console.error(error)
+        }
+
     }
 
     useEffect(() => {
@@ -419,6 +458,7 @@ export default function VistaResumen() {
                     </div>
                 </div>
             </div >
+            <Button onClick={handleSubmitReport}>Guardar resumen</Button>
         </div >
     );
 }

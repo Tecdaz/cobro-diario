@@ -844,3 +844,41 @@ export async function getNombreCobrador(user) {
     if (error) throw error;
     return data.nombre;
 }
+
+export async function submitReport(dataReport) {
+    const { data, error } = await supabase
+        .from('resumen_diario')
+        .insert(dataReport)
+        .select();
+
+    if (error) throw error;
+    return data;
+}
+
+export async function getReport(user, carteraId) {
+    const { data, error } = await supabase
+        .from('resumen_diario')
+        .select('*')
+        .eq('id_cobrador', user.id)
+        .eq('id_cartera', carteraId);
+
+    if (error) throw error;
+    return data;
+}
+
+export async function checkReporteDelDia(user, carteraId) {
+    const startOfDay = getStartOfTheDay()
+    const endOfDay = getEndOfTheDay()
+
+    const { data, error } = await supabase
+        .from('resumen_diario')
+        .select('*')
+        .eq('id_cobrador', user.id)
+        .eq('id_cartera', carteraId)
+        .gte('created_at', startOfDay.toISOString())
+        .lte('created_at', endOfDay.toISOString())
+        .limit(1);
+
+    if (error) throw error;
+    return data && data.length > 0;
+}

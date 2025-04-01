@@ -12,37 +12,37 @@ import { supabase } from '@/lib/db'
 const publicRoutes = ['/login', '/register']
 
 export default function RouteProtector({ children }) {
-    const { user, loading } = useAuth()
+    const { user, loading, canNavigate } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
     const [isPublicRoute, setIsPublicRoute] = useState(false)
-
 
     useEffect(() => {
         // Verificar si la ruta actual es pública
         const isPublic = publicRoutes.some(route => pathname === route || pathname.startsWith(route + '/'))
         setIsPublicRoute(isPublic)
-        console.log('[RouteProtector] Ruta actual:', pathname, 'Es pública:', isPublic, 'Usuario:', user ? 'Autenticado' : 'No autenticado', 'Cargando:', loading);
+        console.log('[RouteProtector] Ruta actual:', pathname, 'Es pública:', isPublic, 'Usuario:', user ? 'Autenticado' : 'No autenticado', 'Puede navegar:', canNavigate);
 
         // Si no está cargando, verificar autenticación
         if (!loading) {
-            console.log('[RouteProtector] Verificando autenticación para', pathname);
             if (!user && !isPublic) {
                 // No está autenticado y no es una ruta pública, redirigir a login
                 console.log('[RouteProtector] Redirigiendo a login - Usuario no autenticado en ruta protegida');
                 router.push('/login')
-            } else if (user && isPublic) {
-                // Está autenticado pero está en una ruta pública (login/register), redirigir a dashboard
-                console.log('[RouteProtector] Redirigiendo a dashboard - Usuario autenticado en ruta pública');
+            } else if (user && !canNavigate && !isPublic) {
+                // Usuario autenticado pero sin permiso para navegar
+                console.log('[RouteProtector] Redirigiendo a login - Usuario sin permiso para navegar');
+                router.push('/login')
+            } else if (user && canNavigate && isPublic) {
+                // Usuario autenticado con permiso para navegar en ruta pública
+                console.log('[RouteProtector] Redirigiendo a dashboard - Usuario autenticado con permiso');
                 router.push('/dashboard')
             }
         }
-    }, [user, loading, pathname, router]);
+    }, [user, loading, pathname, router, canNavigate]);
 
     // Mostrar indicador de carga mientras se verifica la autenticación
     if (loading) {
-        console.log('[RouteProtector] Mostrando indicador de carga, estado actual - user:', user ? 'Existe' : 'No existe',
-            'pathname:', pathname, 'isPublicRoute:', isPublicRoute);
         return (
             <div className="flex flex-col justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -51,8 +51,8 @@ export default function RouteProtector({ children }) {
         )
     }
 
-    // Si es una ruta pública o el usuario está autenticado para una ruta protegida
-    if (isPublicRoute || (user && !isPublicRoute)) {
+    // Si es una ruta pública o el usuario está autenticado y puede navegar
+    if (isPublicRoute || (user && canNavigate && !isPublicRoute)) {
         if (isPublicRoute) {
             // Para rutas públicas (login/register), mostrar solo el contenido sin layout
             return children

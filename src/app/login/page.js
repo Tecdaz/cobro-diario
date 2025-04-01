@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkReporteDelDia, getCartera } from '@/lib/db'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -17,20 +18,14 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const router = useRouter()
-    const { user } = useAuth()
+    const { user, cartera } = useAuth()
 
-    // Si el usuario ya está autenticado, redirigir al dashboard
     useEffect(() => {
-        if (user) {
-            router.push('/dashboard')
-        } else {
-            // Cargar el último correo utilizado si existe
-            const savedEmail = localStorage.getItem('lastUserEmail')
-            if (savedEmail) {
-                setEmail(savedEmail)
-            }
+        const savedEmail = localStorage.getItem('lastUserEmail')
+        if (savedEmail) {
+            setEmail(savedEmail)
         }
-    }, [user, router])
+    }, [])
 
     async function handleSignIn(e) {
         e.preventDefault()
@@ -38,7 +33,6 @@ export default function Login() {
         setError(null)
 
         try {
-            // Guardar el correo en localStorage para futuros inicios de sesión
             localStorage.setItem('lastUserEmail', email)
 
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -50,9 +44,7 @@ export default function Login() {
                 if (error.message.includes('Invalid login credentials')) {
                     throw new Error('Credenciales inválidas. Por favor verifique su correo y contraseña.')
                 } else if (error.message.includes('Invalid refresh token')) {
-                    // Manejo específico para error de token de refresco
                     console.error('Error de token de refresco:', error)
-                    // Intentar limpiar la sesión
                     await supabase.auth.signOut()
                     throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.')
                 } else {
@@ -60,11 +52,30 @@ export default function Login() {
                 }
             }
 
-            // Redireccionar al usuario a la página principal después del inicio de sesión exitoso
-            router.push('/dashboard')
+            // Obtener la cartera del usuario
+            const carteraData = await getCartera(data.user.id)
+            if (!carteraData?.id_cartera) {
+                throw new Error('No se encontró una cartera asociada a su usuario.')
+            }
+
+            // Verificar si existe un reporte del día
+            const existeReporte = await checkReporteDelDia(data.user, carteraData.id_cartera)
+            if (existeReporte) {
+                await supabase.auth.signOut()
+                throw new Error('Ya has registrado un reporte para hoy. No puedes acceder al sistema nuevamente.')
+            }
+
+            // Solo si no hay reporte, permitir el acceso
+            if (!existeReporte) {
+                router.push('/dashboard')
+            }
+
         } catch (error) {
             console.error('Error de autenticación:', error)
             setError(error.message || 'Error al iniciar sesión')
+            if (error.message.includes('Ya has registrado un reporte')) {
+                await supabase.auth.signOut()
+            }
         } finally {
             setLoading(false)
         }
