@@ -5,7 +5,7 @@ import { useLayout } from '@/contexts/LayoutContext';
 import { getClients } from '@/lib/db';
 import ClientCard from '@/components/ClientCard';
 import SearchBar from '@/components/SearchBar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth-context';
 import { buscarEnCampos } from '@/lib/utils';
 
 export default function Clientes() {

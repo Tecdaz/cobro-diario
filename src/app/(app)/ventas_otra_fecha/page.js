@@ -4,7 +4,7 @@ import SearchBar from "@/components/SearchBar";
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getVentasOtrasFechas } from "@/lib/db";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { X, ArrowUpDown } from "lucide-react";
 import { buscarEnCampos } from "@/lib/utils";
 

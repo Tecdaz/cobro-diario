@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLayout } from "@/contexts/LayoutContext";
 import { getDataCuotas } from "@/lib/db";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function HistorialPagos() {
     const { id } = useParams();

@@ -1,7 +1,8 @@
 "use client"
 import { useState, useEffect } from "react"
 import { useLayout } from "@/contexts/LayoutContext"
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/auth-context"
+import { signout } from "@/app/(auth)/auth/logout/actions"
 import {
     Bars3Icon,
     XMarkIcon,
@@ -24,7 +25,7 @@ export default function Header() {
     const [isOpen, setIsOpen] = useState(false)
     const [userMenuOpen, setUserMenuOpen] = useState(false)
     const { title } = useLayout()
-    const { user, signOut, isAuthenticated } = useAuth()
+    const { user, isAuthenticated } = useAuth()
     const pathname = usePathname()
     const router = useRouter()
 
@@ -55,12 +56,8 @@ export default function Header() {
     };
 
     const handleSignOut = async () => {
-        await signOut();
+        await signout();
         setUserMenuOpen(false);
-    };
-
-    const handleLogin = () => {
-        router.push('/login');
     };
 
     return (
@@ -77,7 +74,7 @@ export default function Header() {
                     {/* Botón de usuario en la esquina derecha */}
                     <button
                         className="absolute right-0"
-                        onClick={isAuthenticated ? handleUserMenu : handleLogin}
+                        onClick={handleUserMenu}
                     >
                         <UserCircleIcon className="h-7 w-7" />
                     </button>
@@ -105,9 +102,9 @@ export default function Header() {
             </nav>
 
             {/* Menú de usuario */}
-            {isAuthenticated && (
-                <UserMenu user={user} handleSignOut={handleSignOut} userMenuOpen={userMenuOpen} setUserMenuOpen={setUserMenuOpen} />
-            )}
+
+            <UserMenu user={user} handleSignOut={handleSignOut} userMenuOpen={userMenuOpen} setUserMenuOpen={setUserMenuOpen} />
+
         </header>
     )
 }

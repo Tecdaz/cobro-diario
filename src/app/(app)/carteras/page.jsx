@@ -1,6 +1,6 @@
 "use client"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/auth-context"
 import { getCarterasByUser, setDefaultCartera } from "@/lib/db"
 import { useEffect, useState } from "react"
 import { useLayout } from "@/contexts/LayoutContext"

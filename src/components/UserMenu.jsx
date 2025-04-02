@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
 
 export default function UserMenu({ user, handleSignOut, userMenuOpen, setUserMenuOpen }) {

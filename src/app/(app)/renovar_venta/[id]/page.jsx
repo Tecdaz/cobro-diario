@@ -7,7 +7,7 @@ import { useLayout } from "@/contexts/LayoutContext";
 import { getClientData, createVentaData } from "@/lib/db";
 import SelectField from "@/components/SelectField";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function RenovarVenta() {

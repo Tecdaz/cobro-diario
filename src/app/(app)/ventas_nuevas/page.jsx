@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useLayout } from '@/contexts/LayoutContext';
 import { getVentasHoy } from '@/lib/db';
 import VentaCard from '@/components/VentaCard';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/auth-context';
 export default function VentasNuevas() {
     const { user, cartera } = useAuth();
     const { handleTitleChange } = useLayout();

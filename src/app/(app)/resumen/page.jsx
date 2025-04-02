@@ -3,7 +3,7 @@
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getResumenDiario, getCajaInicial, totalClientes, clientesHoy } from "@/lib/db";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 

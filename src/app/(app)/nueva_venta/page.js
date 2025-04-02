@@ -8,7 +8,7 @@ import { createClientData, createVentaData } from "@/lib/db";
 import { Watch } from "lucide-react";
 import SelectField from "@/components/SelectField";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function NuevaVenta() {

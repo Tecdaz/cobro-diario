@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/auth-context'
 import Header from '@/components/Header'
 import NavigationModal from '@/components/NavigationModal'
 import NavBar from '@/components/NavBar'

@@ -48,32 +48,12 @@ export default function Login() {
                 return
             }
 
-            const { user } = await supabase.auth.getUser()
+            const { data: { user } } = await supabase.auth.getUser()
 
             if (!user) {
                 setError('No se encontró un usuario. Por favor, inicie sesión nuevamente.')
                 setLoading(false)
                 return
-            }
-
-
-
-            // Obtener la cartera del usuario
-            const carteraData = await getCartera(user.id)
-            if (!carteraData?.id_cartera) {
-                throw new Error('No se encontró una cartera asociada a su usuario.')
-            }
-
-            // Verificar si existe un reporte del día
-            const existeReporte = await checkReporteDelDia(user.id, carteraData.id_cartera)
-            if (existeReporte) {
-                await supabase.auth.signOut()
-                throw new Error('Ya has registrado un reporte para hoy. No puedes acceder al sistema nuevamente.')
-            }
-
-            // Solo si no hay reporte, permitir el acceso
-            if (!existeReporte) {
-                router.push('/dashboard')
             }
 
         } catch (error) {

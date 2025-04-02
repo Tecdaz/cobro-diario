@@ -11,9 +11,10 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/contexts/auth-context"
 import { useLayout } from '@/contexts/LayoutContext'
 import { useEffect, useState } from 'react'
+import { signout } from "@/app/(auth)/auth/logout/actions"
 
 import {
     totalClientes,
@@ -62,8 +63,6 @@ export default function VistaResumen() {
     const [movimientosDelDia, setMovimientosDelDia] = useState([])
     const [cajaInicial, setCajaInicial] = useState(0)
     const [totalVentasDelDia, setTotalVentasDelDia] = useState(0)
-
-    const { signOut } = useAuth()
 
 
     useEffect(() => {
@@ -174,12 +173,15 @@ export default function VistaResumen() {
         }
 
         try {
+            setIsLoading(true)
             const response = await submitReport(report)
             console.log(response)
 
-            await signOut()
+            await signout()
         } catch (error) {
             console.error(error)
+        } finally {
+            setIsLoading(false)
         }
     }
 
@@ -232,6 +234,7 @@ export default function VistaResumen() {
 
             } catch (error) {
                 setError(error)
+                console.error(error)
             } finally {
                 setIsLoading(false)
             }

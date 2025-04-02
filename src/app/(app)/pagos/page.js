@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLayout } from "@/contexts/LayoutContext";
 import { supabase } from "@/lib/db";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { ArrowUpDown, Search, List, X } from "lucide-react";
 import { getTodayPayments, getTodasVentas } from "@/lib/db";
 import { buscarEnCampos } from "@/lib/utils";

@@ -1,11 +1,8 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 import { getEndOfTheDay, getStartOfTheDay } from './utils'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
 // Create a single supabase client for interacting with your database
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient()
 
 // Función para depurar peticiones a Supabase
 function logSupabaseRequest(action, request, result) {
@@ -835,10 +832,13 @@ export async function deleteAllVentaRecords(ventaId) {
 }
 
 export async function getNombreCobrador(user) {
+    console.log('[DB] Solicitando nombre del cobrador para usuario:', user);
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    console.log('[DB] Datos del usuario:', userData);
     const { data, error } = await supabase
         .from('system_users')
         .select('nombre')
-        .eq('id', user.id)
         .single();
 
     if (error) throw error;
