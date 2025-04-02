@@ -4,7 +4,7 @@ import SearchBar from "@/components/SearchBar";
 import { useLayout } from "@/contexts/LayoutContext";
 import { useEffect, useState } from "react";
 import { getTodayCobros, getTodayPayments, getCart } from "@/lib/db";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/auth-context";
 import { buscarEnCampos } from "@/lib/utils";
 
 export default function Dashboard() {
@@ -17,7 +17,6 @@ export default function Dashboard() {
 
     const handleVrfChange = () => {
         setVrfActive(!vrfActive);
-
     }
 
     const handleSearch = (term) => {
@@ -40,6 +39,8 @@ export default function Dashboard() {
                     setFilteredData(dataFetch);
                 }
                 else {
+                    console.log("fetching cobros")
+                    console.log(user, cartera.id_cartera)
                     const dataFetch = await getTodayCobros(user, cartera.id_cartera);
 
                     setData(dataFetch);
@@ -47,10 +48,12 @@ export default function Dashboard() {
                 }
             }
             catch (error) {
-
+                console.log(error)
             }
         }
         if (user && cartera.id_cartera) {
+            console.log(user, cartera.id_cartera)
+            console.log("fetching data")
             fetchData();
         }
 

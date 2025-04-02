@@ -1,8 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
 import { LayoutProvider } from '@/contexts/LayoutContext'
-import { AuthProvider } from '@/contexts/AuthContext'
-import RouteProtector from "@/components/RouteProtector"
+import { AuthProvider } from '@/contexts/auth-context'
 import { Analytics } from '@vercel/analytics/next';
 
 const geistSans = Geist({
@@ -28,12 +27,12 @@ export default function RootLayout({ children }) {
           <body
             className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col h-screen`}
           >
-            <RouteProtector>
-              <div className="mx-auto w-full max-w-[768px] h-full flex flex-col">
-                {children}
-                <Analytics />
-              </div>
-            </RouteProtector>
+
+            <div className="mx-auto w-full max-w-[768px] h-full flex flex-col">
+              {children}
+              <Analytics />
+            </div>
+
           </body>
         </html>
       </AuthProvider>

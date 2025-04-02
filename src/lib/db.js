@@ -25,7 +25,7 @@ export async function getTodasVentas(user, carteraId) {
     return data
 }
 export async function getTodayCobros(user, carteraId) {
-    console.log('Solicitando cobros del día para usuario:', user.id, 'cartera:', carteraId);
+    console.log('Solicitando cobros del día para usuario:', user, 'cartera:', carteraId);
     const request = { cobrador: user.id, id_cartera: carteraId };
     const { data, error } = await supabase
         .from('ventas_para_cobrar')
@@ -685,12 +685,12 @@ export async function getSaldos(ventaId) {
     return data;
 }
 
-export async function getCartera(userId) {
-    console.log('[DB] Solicitando cartera para usuario:', userId);
+export async function getCartera(user) {
+    console.log('[DB] Solicitando cartera para usuario:', user);
     const { data, error } = await supabase
         .from('usuario_cartera')
         .select('id_cartera, cartera(nombre)')
-        .eq('id_usuario', userId)
+        .eq('id_usuario', user.id)
         .eq('default', true)
         .limit(1)
         .single();

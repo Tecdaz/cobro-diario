@@ -2,15 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/db'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import Link from 'next/link'
-import { useAuth } from '@/contexts/AuthContext'
 import { checkReporteDelDia, getCartera } from '@/lib/db'
+import { login } from './actions'
+import { createClient } from '@/lib/supabase/client'
 
 export default function Login() {
     const [email, setEmail] = useState('')
@@ -18,7 +17,8 @@ export default function Login() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState(null)
     const router = useRouter()
-    const { user, cartera } = useAuth()
+
+    const supabase = createClient()
 
     useEffect(() => {
         const savedEmail = localStorage.getItem('lastUserEmail')
@@ -35,31 +35,37 @@ export default function Login() {
         try {
             localStorage.setItem('lastUserEmail', email)
 
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            })
+            const formData = new FormData()
+            formData.append('email', email)
+            formData.append('password', password)
 
-            if (error) {
-                if (error.message.includes('Invalid login credentials')) {
-                    throw new Error('Credenciales inválidas. Por favor verifique su correo y contraseña.')
-                } else if (error.message.includes('Invalid refresh token')) {
-                    console.error('Error de token de refresco:', error)
-                    await supabase.auth.signOut()
-                    throw new Error('Sesión expirada. Por favor inicie sesión nuevamente.')
-                } else {
-                    throw error
-                }
+            try {
+                await login(formData)
+            } catch (error) {
+                console.error('Error al iniciar sesión:', error)
+                setError(error.message || 'Error al iniciar sesión')
+                setLoading(false)
+                return
             }
 
+            const { user } = await supabase.auth.getUser()
+
+            if (!user) {
+                setError('No se encontró un usuario. Por favor, inicie sesión nuevamente.')
+                setLoading(false)
+                return
+            }
+
+
+
             // Obtener la cartera del usuario
-            const carteraData = await getCartera(data.user.id)
+            const carteraData = await getCartera(user.id)
             if (!carteraData?.id_cartera) {
                 throw new Error('No se encontró una cartera asociada a su usuario.')
             }
 
             // Verificar si existe un reporte del día
-            const existeReporte = await checkReporteDelDia(data.user, carteraData.id_cartera)
+            const existeReporte = await checkReporteDelDia(user.id, carteraData.id_cartera)
             if (existeReporte) {
                 await supabase.auth.signOut()
                 throw new Error('Ya has registrado un reporte para hoy. No puedes acceder al sistema nuevamente.')
